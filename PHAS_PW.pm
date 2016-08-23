@@ -9,7 +9,7 @@ use Carp;
 #					get_homedir        get_expdate
 #					get_diskquota      get_account confirm_input
 #					];
-
+my $Verbose = $main::Verbose; 
 my $passwddir = "/opt/sysadmin/common/passwd/";
 my $bottomdir = $passwddir ."bottoms/";
 my $userdb    = $passwddir ."users.db";		# data file for existing ids
@@ -53,35 +53,41 @@ sub copy_files {
 	}
 	return;
 }
-
-sub createid {
-
-    my $udata_ref = shift;
-    my %udata = %{$udata_ref};
-
-	print " Updating Unix files... PGS \n " if $Verbose;
-    update_unix_files($udata_ref);
-
-	print " Updating User Database  \n " if $Verbose;
-    update_usersDB($udata_ref);
-    
-	print "Creating  home dir as [$udata{homedir}]\n" if $Verbose;
-    PHAS_PW_Utils::mk_homedir ($udata{uid}, $udata{gid}, $udata{homedir} );
-
-	print "Copying proto user files \n" if $Verbose;
-	PHAS_PW_Utils::copy_proto_files($Proto_Dir );
-
-	print "Updating pkkota DB  \n" if $Verbose;
-    create_pykota_account( $udata{username}, $udata{printquota} ); 
-
-	print "Updating pkkota DB  \n" if $Verbose;
-    do_mail( $udata{username},  $udata{homedir}, $udata{uid}, $udata{gid},  $udata{category} );  
-}
+#
+#sub createid {
+#
+#    my $udata_ref = shift;
+#    my %udata = %{$udata_ref};
+#	my $Verbose = $main::Verbose; 
+#	print " Add new user  Unix files (tau)... PGS \n " if $Verbose;
+#
+#	exit unless ( Ask( "continue ?","Y") );
+#
+#    update_unix_files($udata_ref);
+#
+#	print " Updating User Database  \n " if $Verbose;
+#	exit unless ( Ask( "continue ?","Y") );
+#    update_usersDB($udata_ref);
+#    
+#	print "Creating  home dir as [$udata{homedir}]\n" if $Verbose;
+#    PHAS_PW_Utils::mk_homedir ($udata{uid}, $udata{gid}, $udata{homedir} );
+#
+#	print "Copying proto user files \n" if $Verbose;
+#	PHAS_PW_Utils::copy_proto_files($Proto_Dir );
+#
+#	print "Updating pkkota DB  \n" if $Verbose;
+#    create_pykota_account( $udata{username}, $udata{printquota} ); 
+#
+#	print "Updating pkkota DB  \n" if $Verbose;
+#    do_mail( $udata{username},  $udata{homedir}, $udata{uid}, $udata{gid},  $udata{category} );  
+#}
 
 sub update_unix_files {
     my $udata_ref = shift;
     my %udata = %{$udata_ref};
-                  
+                
+	print "Update the PSG files: $pwfile $shadow $grpfile\n" if Verbose;
+
     open(PW, ">>", $pwfile) or die "ERROR: Can't open $pwfile! ";
     print PW "$udata{username}:x:$udata{uid}:$udata{gid}:$udata{fullname}:$udata{homedir}:$udata{shell}\n";
     close(PW);
@@ -205,7 +211,7 @@ INPUT_USER_PARAMETERS:
 #    my ($guess) = lc( $1 . $user_data{lastname})  if $user_data{firstname} =~ /^(\w)/;		# get bboop from "Betty Boop" guess for useranme
     my $guess = $user_data{CWL};
     $user_data{username}   = get_username ($guess);
-    $user_data{fullname}   = $user_data{lastname} . " " . $user_data{lastname};
+    $user_data{fullname}   = $user_data{firstname} . " " . $user_data{lastname};
     $user_data{uid}        = get_uid($user_data{category});
     $user_data{gid}        = get_gid($user_data{uid});
     $user_data{shell}      = "/bin/bash";
@@ -218,12 +224,6 @@ INPUT_USER_PARAMETERS:
     my $ans = confirm_input ( \%user_data);
     if ( $ans =~ /^N/i) { goto INPUT_USER_PARAMETERS; }
 	
-	print "------------------------------------------------------------------------\n";
-	print "------------------------------------------------------------------------\n";
-	print "Creating id ...\n";
-	my $gcos = "$firstname "."$lastname";
-#	createid ( \%user_data );
-	print "get_user_info:: 184 home dir  is [$user_data{homedir}]\n";
     return \%user_data;
 }
 

@@ -3,30 +3,51 @@
 # script to create user accounts
 #
 
-
 use lib ".";
 use PHAS_PW;
 use PHAS_PW_Utils;
+
+use constant Verbose => 1;
 #
-print "\n... addusr ...  \n";
+print "\nStep 1 get info on user  ...  \n";
 
 my  $ud_ref  = PHAS_PW::get_user_info();
 %user_data = %{$ud_ref};
-foreach my $k ( keys %user_data) {
-	print "key [$k] ==> [$user_data{$k}]\n";
-}
+#foreach my $k ( keys %user_data) {
+#	print "key [$k] ==> [$user_data{$k}]\n";
+#}
+print "\nStep 2 get a password ? ...  \n";
 
 $user_data{pwd} = PHAS_PW_Utils::get_password($user_data{uid});
 
 
-	print "------------------------------------------------------------------------\n";
-	print "------------------------------------------------------------------------\n";
-	print "Creating id ...\n";
+print "\n", "="x45, " \n";
+print "\nStep 3 Add user to UNIX files  ...\n";
 #	my $gcos = "$firstname "."$lastname";
-	PHAS_PW::createid ( \%user_data );
-    PHAS_PW::mk_pgs_bottoms();
-    PHAS_PW:pgs_propagate();
-    
 
+    PHAS_PW::update_unix_files($udata_ref);
+
+	print "\nStep 4 Add user to UNIX files  ...\n";
+	PHAS_PW::update_usersDB($udata_ref); 
+	
+	print "\nStep 5 Creating  home dir as [$udata{homedir}]\n" if Verbose;
+	PHAS_PW_Utils::mk_homedir ($udata{uid}, $udata{gid}, $udata{homedir} );
+	
+	print "\nStep 6 Copying proto user files (skipping)  \n" if Verbose;
+	#	PHAS_PW_Utils::copy_proto_files($Proto_Dir );
+	
+	print "\nStep 7 Updating pkkota DB  \n" if Verbose;
+	PHAS_PW_Utils::create_pykota_account( $udata{username}, $udata{printquota} );
+	
+	print "\nStep 7 Updating mail  \n" if Verbose;
+	PHAS_PW_Utils::do_mail( $udata{username},  $udata{homedir},
+                            $udata{uid}, $udata{gid},  $udata{category} );
+
+
+
+#    PHAS_PW::mk_pgs_bottoms();
+#    PHAS_PW:pgs_propagate();
+#    
+#
 
 
