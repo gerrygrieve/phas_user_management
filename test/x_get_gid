@@ -1,0 +1,12 @@
+#!/usr/bin/perl -w
+
+use lib "..";
+use PHAS_PW_Utils qw[ Ask  get_username get_gid];
+my $pid =3424;
+
+
+
+
+my $gid = get_gid($pid);
+
+print "A useable GID is {$gid}\n";

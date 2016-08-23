@@ -1,0 +1,21 @@
+#!/usr/bin/perl -w
+
+use lib "..";
+use PHAS_PW_Utils;
+use PHAS_PW;
+
+my $PrntSvr = "prntsvr.phas.ubc.ca";
+my $username = "bboop".$$;
+my $printquota = "#";
+
+
+PHAS_PW::create_pykota_account($username, $printquota );
+
+print "ok, the pykota account for $username has been created\n";
+print " to check use: \"ssh prntsvr.phas.ubc.ca pkusers --list\"\n";
+print "$username should be the last entry\n";
+
+if (Ask("do you want to delete this entry", "Y") =~ /y/i ) {
+	PHAS_PW::delete_pykota_account($username);
+}
+

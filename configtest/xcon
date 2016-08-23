@@ -1,0 +1,72 @@
+#!/usr/bin/perl -w
+
+# use Config::Simple;
+use Config::Tiny;
+use Net::LDAP;
+use Data::Dumper;
+my $cfile = '/opt/sysadmin/common/lib/ldap_conf.file';
+my $Config = Config::Tiny->new;
+$Config = Config::Tiny->read( $cfile );
+
+my $this_server = 'IPA01';
+
+my $out = q{$Config->{$this_server}->{'server'}};
+print "\n\n var referenced as $out =>  $Config->{$this_server}->{'server'}\n";
+my $server = $Config->{$this_server}->{'server'};
+print "server is $server \n";
+my $ldap = Net::LDAP->new( $server,
+                            version => 3 ) or
+       die "$this_server error: Cannot create new LDAP object - $@";
+	
+my $mesg = $ldap->start_tls( verify => 'none',        
+                             cafile => $Config->{$this_server}->{cafile}
+			  ); 
+die "$this_server  error: ", $mesg->code, ": ", $mesg->error() if ($mesg->code());
+
+$mesg = $ldap->bind($Config->{$this_server}->{root_dn}, password=>$Config->{$this_server}->{'auth'});
+   die "$this_server  error: ", $mesg->code, ": ", $mesg->error() if ($mesg->code());
+
+my $result = $ldap->search(	base   => $Config->{$this_server}->{base_dn},
+				filter => "(uid=bboop)",
+                                  );
+die "$this_server  error: ", $result->error if $result->code;
+
+printf "COUNT: %s\n", $result->count;
+my @attrs = qw (  objectClass gecos cn 
+                  uidNumber gidNumber loginShell homeDirectory uid); 
+my @entries = $result->entries;
+my $entry = $entries[0];
+       foreach my $kk ( @attrs ) {
+                my $val = $entry->get_value ( $kk );
+                print "  [$kk]=>  $val \n";
+        } 
+exit;
+
+
+foreach my $entry ($result->entries) {
+	print " the entry is $entry \n\n";
+	foreach $jk ( keys %$entry) { print "key of entry is [$jk]\n"; }
+	print " dump the entry ...\n";
+	print Dumper ($entry);
+	print "-"x20, "\n\n";
+	foreach my $kk ( @attrs ) { 
+		my $val = $entry->get_value ( $kk );
+		print "  [$kk]=>  $val \n"; 
+	}
+	#printit ( $entry->attrs );
+	$entry->dump;
+#	print Dumper($entry);
+	
+} 
+
+
+sub printit {
+	my $ent_ref = shift;
+	print " input to printit is $ent_ref\n";
+	my %attr = %{$ent_ref};
+
+	foreach my $k (keys %attr ) {
+		print "$k ==> [$attr{$k}] \n";
+
+	}
+}

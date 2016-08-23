@@ -1,0 +1,237 @@
+#!/usr/local/bin/perl 
+#
+# script to remove user accounts
+#
+
+# set path so that grep command works for different architectures
+$ENV{'PATH'} = '/usr/sbin:/usr/local/sbin:/bin:/usr/bin:/usr/local/bin:/usr/ucb:/usr/bsd';
+# set backspace to erase
+#`stty erase '^H'`;
+
+use lib '/opt/sysadmin/common/passwd/';
+require 'pgs_gen.pl';
+require 'check_host.pl';
+require 'deleteLDAP.pl';
+require 'deleteLDAP2.pl';
+require 'deleteIPA.pl';
+&check_host;
+use English;
+use Carp;
+use PHAS_PW_Utils;
+use PHAS_PW;
+$passwddir  = "/opt/sysadmin/common/passwd/";
+$usrfile    = $passwddir."users.db";		# data file for existing ids
+
+$systemdir="/etc/";
+#$systemdir=$passwddir."test/";
+$pwdfile=$systemdir."passwd";		# system passwd file
+$shdfile=$systemdir."shadow";		# system shadow file
+$grpfile=$systemdir."group";		# system group file
+$smbfile="/etc/samba/smbpasswd";        # system samba password file
+#$smbfile=$systemdir."smbpasswd";        # system samba password file
+
+#--------------------------------------------------------------
+$localhost = `hostname`;
+$ssh_cmd = "/usr/bin/ssh";
+
+# Must be run by root
+# Must be run by root
+
+croak "$PROGRAM_NAME must be run from root\n " if ( $EFFECTIVE_USER_ID );
+
+umask 127;
+
+print "\n... $PROGRAM_NAME ...  \n";
+
+#
+#Save passwd/shadow/group/samba files - exit if cannot save
+PHAS_PW::copy_files();
+ 
+# Get user ID name
+my $userid = Ask ("Enter user id to be removed: ";
+
+# Check if user exists in passwd file
+$pwrecord = `grep ^$userid: $pwdfile `;
+if ( !$pwrecord ) {
+   print "userid <$userid> not in $pwdfile on $localhost\n";
+   print "Aborting script.\n" ; 
+   exit 1;
+}
+#
+# Confirm that we are talking about the same user
+	print "$pwrecord";
+	my $ans = Ask ("Want to delete this user from system", 'Y');
+	if ( !($ans eq "y" or $ans eq "Y" ) ) {
+		die   "Aborting script. $userid has NOT been deleted\n"; 
+   }
+rm_pykota($userid);
+del_user_from_group($userid);
+#del_home_dir
+#del_mail_dir;
+#update users_DB
+#del_Windows_user;
+#del_LDAP_user;
+#del_UNix_user;
+#del_events_list_entry($userid);
+
+
+#
+# Get home directory from pwdfile and display the files
+   print "Checking home directory.\n";
+   ($name,$passwd,$uid,$gid,$quota,$comment,$gcos,$homedir,$shell) = getpwnam($userid);  
+	if (defined ($x = readlink("homedir")))  {
+        $homedir = $x;
+    }
+
+	if ( -d $homedir ) {
+		
+		print "\nHere's what's in $homedir:\n";
+      $filelist = `ls $homedir`;
+      print "$filelist";
+      print "\nWant to destroy the $homedir directory? ";
+      chop($prompt = <STDIN>); 
+      if ( $prompt eq "y" or $prompt eq "Y" or $prompt eq "ok" ) {
+     	 if ( ! &exe_cmd("rm -f -R $homedir") ) { 
+             print "*** Please delete the $homedir directory manually.\n";
+         }
+	 if ( $symlink ) {
+     	     if ( ! &exe_cmd("rm $symlink") ) { 
+	         print "*** Please delete symbolic link $symlink manually. ***\n";
+             }
+	 }
+     	 if ( ! &exe_cmd( "$ssh_cmd mail rm -R $homedir") ) { 
+             print "*** Please delete the MAIL:$homedir directory manually.\n";
+         }
+      } else {
+             print "*** Please delete the $homedir directory manually (don't forget the mail server).\n";
+      }
+   } else {
+      print "*** No home directory for $userid!! ***";
+   }
+print "\n--------------------------------------\n";
+#
+# Display entry in users database file
+   print "Checking users.db file.\n";
+   $newfile = $usrfile.".new";
+   system("sed  '/^$userid:/ d' $usrfile > $newfile");
+   $usrdiff = `diff $usrfile $newfile`;
+   if ( $usrdiff ) {
+       print "Okay to delete the entry in $usrfile for this id?:\n";
+       print "$usrdiff\n";
+       chop($prompt = <STDIN>); 
+       if ( $prompt eq "y" or $prompt eq "Y" or $prompt eq "ok" ) {
+     	   if ( ! &exe_cmd("mv $newfile $usrfile") ) {
+               print "*** Please delete $usrfile entry manually. ***\n";
+               print "Aborting script.\n" ; 
+               exit 1;
+	   } else {
+     	       &exe_cmd("chown root:www $usrfile");
+     	       &exe_cmd("chmod 640 $usrfile"); 
+           }
+           print "Entry for $userid in $usrfile deleted.\n";
+       } else {
+           print "*** Please delete $usrfile entry manually. ***\n";
+       }
+   } else {
+      print "*** Missing an entry in $usrfile for $userid! ***\n";
+   }
+print "\n--------------------------------------\n";
+#
+# Delete account from Windows domain
+   print "Deleting acct from Windows PDC...";
+   
+    &exe_cmd("$ssh_cmd administrator\@phaspdc powershell.exe -InputFormat None d:\\\\scripts\\\\RemoveUser.ps1 $userid >/dev/null");
+
+print "\n--------------------------------------\n";
+
+# Delete account from IPA server
+   print "Deleting acct from IPA02.phas.ubc.ca...";
+    &deleteIPA($userid);
+print "\n--------------------------------------\n";
+#
+# Delete entry in /etc/passwd, /etc/shadow, /etc/samba/smbpasswd
+    print "Ready to delete following entry from $pwdfile?\n";
+    print "$pwrecord\n";
+    chop($prompt = <STDIN>); 
+    if ( $prompt eq "y" or $prompt eq "Y" or $prompt eq "ok" ) {
+   	$newpwd = $pwdfile.".new";
+        $result = system("sed  '/^$userid:/ d' $pwdfile > $newpwd");
+   	if ( ! $result == 0 ) {
+             print "*** Unable to create $newpwd. Please delete $pwdfile entry manually ***\n";
+             print "Aborting script.\n" ; 
+             exit 1;
+        }
+   	$newshd = $shdfile.".new";
+        $result = system("sed  '/^$userid:/ d' $shdfile > $newshd");
+   	if ( ! $result == 0 ) {
+             print "*** Unable to create $newshd. Please delete $shdfile entry manually ***\n";
+             print "Aborting script.\n" ; 
+             exit 1;
+        }
+   	$newsmb = $smbfile.".new";
+    $result = system("sed  '/^$userid:/ d' $smbfile > $newsmb");
+
+   	if ( ! $result == 0 ) {
+             print "*** Unable to create $newsmb. Please delete $smbfile entry manually ***\n";
+             print "Aborting script.\n" ; 
+             exit 1;
+        }
+ 	#trap all interrupts while writing new file into /etc/passwd
+	my @ignored_sig = qw(HUP INT QUIT TRAP TERM);
+	foreach my $sig (@ignored_sig) { $SIG{$sig}= "IGNORE";}
+        if ( &exe_cmd("mv $newpwd $pwdfile") ) {
+			&exe_cmd("chown root:root $pwdfile");
+			&exe_cmd("chmod 644 $pwdfile");
+        } else {
+             print "*** Please delete $pwdfile entry manually. ***\n";
+             print "Aborting script.\n" ; 
+             exit 1;
+        }
+        if ( &exe_cmd("mv $newshd $shdfile") ) {
+	     &exe_cmd("chown root:root $shdfile");
+	     &exe_cmd("chmod 440 $shdfile");
+        } else {
+             print "*** Please delete $shdfile entry manually. ***\n";
+             print "Aborting script.\n" ; 
+             exit 1;
+        }
+        if ( &exe_cmd("mv $newsmb $smbfile") ) {
+	     &exe_cmd("chown root:root $smbfile");
+	     &exe_cmd("chmod 600 $smbfile");
+        } else {
+             print "*** Please delete $smbfile entry manually. ***\n";
+             print "Aborting script.\n" ; 
+             exit 1;
+        }
+        print "Entry for $userid in $pwdfile deleted.\n";
+   	# reallow interrupts to abort program
+	foreach my $sig (@ignored_sig) { $SIG{$sig}= "DEFAULT";} 
+    } else {
+        print "*** Please delete $pwdfile, $shdfile entry manually. ***";
+   }
+print "\n--------------------------------------\n";
+#
+# Propagate system files to other servers
+   print "Generating new system files.\n";
+   &pgs_gen("all");
+print "\n--------------------------------------\n";
+
+exit;
+
+sub exe_cmd  {
+   $cmd=shift(@_);
+   $DEBUG = 0;   # Truth is the absence of Falsehood! (which is: zero|null|undefined)
+   if ( $DEBUG ) {
+       print "DEBUG: $cmd\n";
+       return 1;
+   } else {
+       $result = system("$cmd");
+       if ( $result == 0 ) {
+	   #print "$cmd\n";
+           return 1;
+       } else {
+	   print "COMMAND FAILED: $cmd\n";
+           return 0;
+       }
+   }
+}

@@ -1,0 +1,42 @@
+#!/usr/bin/perl -w
+
+# use Config::Simple;
+use Config::Tiny;
+use Net::LDAP;
+
+
+my $Config = Config::Tiny->new;
+$Config = Config::Tiny->read( 'conf.file' );
+
+my $this_server = 'IPA01';
+
+
+my $out = q{$Config->{$this_server}->{'server'}};
+print "\n\n var referenced as $out =>  $Config->{$this_server}->{'server'}\n";
+my $server = $Config->{$this_server}->{'server'};
+print "server is $server \n";
+my $ldap = Net::LDAP->new( $server,
+                            version => 3 ) or
+       die "$this_server error: Cannot create new LDAP object - $@";
+	
+  my $mesg = $ldap->start_tls( verify => 'none',        
+								cafile => $Config->{$this_server}->{cafile}
+							  ); 
+   die "$this_server  error: ", $mesg->code, ": ", $mesg->error() if ($mesg->code());
+
+
+  $mesg = $ldap->bind($Config->{$this_server}->{root_dn}, password=>$Config->{$this_server}->{'auth'});
+   die "$this_server  error: ", $mesg->code, ": ", $mesg->error() if ($mesg->code());
+
+	my $result = $ldap->search(	base   => $Config->{$this_server}->{base_dn},
+					filter => "(uid=bboop)",
+                                  );
+	die "$this_server  error: ", $result->error if $result->code;
+
+ 
+	printf "COUNT: %s\n", $result->count;
+ 
+	foreach my $entry ($result->entries) {
+		$entry->dump;
+	}
+ 

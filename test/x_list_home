@@ -1,0 +1,12 @@
+#!/usr/bin/perl -w
+
+use lib "..";
+use PHAS_PW;
+
+
+my $user = "bboop";
+# Get home directory from pwdfile and display the files
+    print "Checking home directory....\n";
+   $homedir = (getpwnam($user))[7];
+PHAS_PW::list_homefiles ($homedir);
+

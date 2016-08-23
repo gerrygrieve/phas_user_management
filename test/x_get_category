@@ -1,0 +1,10 @@
+#!/usr/bin/perl -w
+
+use lib "..";
+use PHAS_PW_Utils qw[ Ask  get_username get_category];
+
+
+
+my $cat  = get_category();
+
+print "A useable category is {$cat}\n";

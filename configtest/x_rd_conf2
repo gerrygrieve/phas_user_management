@@ -1,0 +1,45 @@
+#!/usr/bin//perl -w
+
+# use Config::Simple;
+use Config::Tiny;
+
+my $config_file = '/opt/sysadmin/common/lib/ldap_conf.file';
+my $Config = Config::Tiny->new;
+$Config = Config::Tiny->read( $config_file );
+
+use Data::Dumper;
+
+#print " show the config .... \n";
+#foreach my $section (sort keys %$Config) {
+#    print " \n[$section]\n";
+#    my %shash = %{$Config->{$section}};
+###print Dumper(%shash);
+#    foreach my $ckey ( sort keys %shash) {
+#        print "key is {$ckey} ==> $shash{$ckey}\n ";server 
+#    }
+#}
+
+
+print "\n\nshow the config for a particular section ..\n";
+
+
+my $this_section = 'IPA01';
+print "server is {$this_section}\n";
+#print "dump the conf \n";
+#print Dumper ( $Config->{$this_section});
+my %this_conf =  %{$Config->{$this_section}};
+
+#print Dumper ( %this_conf);
+
+foreach my $ckey ( sort keys %this_conf) {
+    print "keys is {$ckey} ==> $this_conf{$ckey}\n "; 
+}
+
+
+my $out = q{$Config->{$this_section}->{'server'}};
+
+my $server = $Config->{$this_section}->{'server'};
+print "server is {$server}\n";
+print "\n\n var referenced as $out =>  $Config->{$this_section}->{'server'}\n";
+ $server = $Config->{$this_section}->{'server'};
+

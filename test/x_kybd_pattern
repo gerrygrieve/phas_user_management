@@ -1,0 +1,13 @@
+#!/usr/bin/perl -w
+
+use lib "..";
+use PHAS_PW_Utils qw[ Ask  kybd_patterns  get_username get_gid];
+
+
+my @pass = qw { qwertyu bnm fghj 34567 olpass qazwsxedc };
+
+foreach my $p (@pass) {
+  my $err =  kybd_patterns($p);
+  if ($err ) { print "$err\n";}
+  else       { print "$p ---> passed kydb_paterrn test all right!!!\n";}
+}

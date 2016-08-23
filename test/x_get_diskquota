@@ -1,0 +1,10 @@
+#!/usr/bin/perl -w
+
+use lib "..";
+use PHAS_PW_Utils qw[  get_diskquota ];
+
+foreach my $c ( qw [System Ugrad Adj-Assoc Faculty Grads Others Postdocs Staff Misc Visitor ]) {
+
+	my $q  = get_diskquota($c);
+	printf "A useable disquota for category {%13s}	 is {%s}\n", $c, $q;
+}

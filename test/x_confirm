@@ -1,0 +1,44 @@
+#!/usr/bin/perl -w
+
+use lib "..";
+use PHAS_PW_Utils qw[ Ask  do_protofiles get_username get_category get_studentnumber get_uid get_homedir
+                   get_expdate get_diskquota get_account confirm_input];
+
+print "testing confirm_input subroutine ... \n";
+
+
+#my  ( $username, $fullname,  $category, $studentno, $uid, $gid, $shell,
+#	  $homedir,  $expdate,    $diskquota, $account,   $printquota) =
+#     ( "bboop", "Betty Boop", "ugrad", "12785412", "67", "67", "/bin/bash",
+#	  "/home2/bboop", "2018-09-00", "disk100", "Fred", "cash");
+
+INPUT_USER_PARAMETERS:
+	 
+my $lastname  = Ask ("Enter Lastname");
+my $firstname = Ask ('Enter First Name');
+
+my ($guess) = lc( $1 . $lastname)  if $firstname =~ /^(\w)/;		# get bboop guess for useranme
+
+my $username  = get_username ($guess);
+my $fullname  = "$firstname "."$lastname";
+my $category  = get_category();
+my $studentno = get_studentnumber();
+my $uid       = get_uid($category);
+my $gid       = $uid;
+my $shell     = "/bin/bash";
+my $homedir   = get_homedir($category, $username);
+my $expdate   = get_expdate($category);
+my $diskquota = get_diskquota($category);
+my $account   = get_account($category);
+my $printquota = "#"; 
+
+my $ans = 	PHAS_PW_Utils::confirm_input ( $username, $fullname,  $category, $studentno, $uid, $gid, $shell,
+	  $homedir,  $expdate,    $diskquota, $account,   $printquota);
+
+if ($ans =~ /^Y/i) { print "On we go..\n";}
+else               { print "Oops one more parameter is not to our liking, back we go \n\n";
+					 goto INPUT_USER_PARAMETERS; }
+	
+
+
+	

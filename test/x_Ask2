@@ -1,0 +1,22 @@
+#!/usr/bin/perl -w
+
+use lib "..";
+use PHAS_PW_Utils qw[ Ask ];
+my $prompt = "please enter a string";
+my $default = "default";
+
+
+print "test1 a prompted question w default allow default \n"; 
+my $ans1 = Ask ($prompt, $default);
+ print " received answer {$ans1} == {$default}\n\n";
+ 
+
+print "test2 a prompted question w default; override default  default \n"; 
+my $ans2 = Ask ($prompt, $default);
+ print " received answer {$ans2} != {$default}\n\n";
+
+
+print "test3  a prompted question w/o default  \n"; 
+my $ans3 = Ask ($prompt);
+ print " received answer {$ans3}\n\n ";
+

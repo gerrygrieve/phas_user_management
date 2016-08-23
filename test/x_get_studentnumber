@@ -1,0 +1,10 @@
+#!/usr/bin/perl -w
+
+use lib "..";
+use PHAS_PW_Utils qw[ Ask  get_username get_category get_studentnumber get_uid];
+
+
+
+my $sn  = get_studentnumber();
+
+print "A useable student number is {$sn}\n";

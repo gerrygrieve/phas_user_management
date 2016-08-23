@@ -1,0 +1,8 @@
+#!/usr/bin/perl -w
+
+my $lastname = "Gireve";
+my $firstname = "Edgar";
+
+my ($guess) = lc ($1 . $lastname)  if $firstname =~ /^(\w)/;
+
+print "I guess $guess\n";

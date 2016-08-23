@@ -1,0 +1,19 @@
+#!/usr/bin/perl -w
+
+# test protodir copy 
+
+use lib "..";
+
+use PHAS_PW_Utils;
+
+ 
+
+    my $protodir = "";
+    my $homedir  = "/tmp/prototest/";
+    my $uid      = 1002;
+    my $gid      = 307;
+    
+mkdir $homedir, 0777 || die "cannot make a temp dir $homedir $!";
+    
+    
+PHAS_PW_Utils::do_protofiles( $protodir, $homedir, $uid,  $gid   )

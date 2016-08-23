@@ -1,0 +1,29 @@
+#!/usr/bin/perl
+
+	my @porder = qw ( username	fullname	category	studentno 
+					  uid       gid  		shell   	homedir  
+					  expdate 	diskquota   account		printquota
+				    );
+	my %prompts = ( username  	=> "Username",
+					fullname  	=> "FullName", 
+					category  	=> "Category",
+					studentno  	=> "StudentNo",
+					uid   		=> "UID",
+					gid   		=> "GID",
+					shell   	=> "Shell",
+					homedir   	=> "homedir",
+					expdate   	=> "ExpDate",
+					diskquota 	=> "diskquota",
+					account   	=> "Print_Account",
+					printquota  => "Print_Quota",
+				  );
+	
+
+	print " \nPlease confirm these paramters are to used for account creation \n\n";  
+	
+	foreach my $p ( @porder ) {
+		printf "%15s: %s\n",$prompts{$p}, $p;
+	}
+	foreach my $pp (keys %prompts) {
+		print "$pp --> $prompts{$pp}\n";
+	}

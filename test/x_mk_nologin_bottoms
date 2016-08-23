@@ -1,0 +1,44 @@
+#!/usr/bin/perl -w
+
+
+mk_nologin_bottoms();
+
+
+sub mk_pgs_bottoms  {
+    my $dst_file_login   =  "/opt/sysadmin/common/passwd/passwd.bot";
+    my $dst_file_nologin = "/opt/sysadmin/common/passwd/passwd.nologin.bot";
+    system ("sed -n '/splitz/,\$p' /etc/passwd > $dst_file_login");
+    
+    open (BOT, "<", $dst_file_login)      || die "Cannot open file $dst_file_login\n";
+    open (NOLOGIN, ">",$dst_file_nologin) || die "Cannot open file $dst_file_nologin\n";
+
+    my @exceptions = qw ( rap grieve hongyun );
+    foreach $line (<BOT>) { 
+        my ($uname,$pw,$uid,$gid,$gcos,$hdir,$shell) = split /:/, $line;
+        if ( grep( /^$uname$/, @exceptions ) ) { $shell = "/bin/bash"; }
+        else                                   { $shell = "/sbin/nologin"; }
+        
+        print NOLOGIN "$uname:$pw:$uid:$gid:$gcos:$hdir:$shell\n";
+    }
+    close BOT;
+    close NOLOGIN;
+    
+    
+## shadow bottom...
+    system ("sed -n '/splitz/,\$p' /etc/shadow >/etc/shadow.bot");
+    system ("cp /etc/shadow.bot /opt/sysadmin/common/passwd/shadow.bot");
+    
+    system ("sed -n '/splitz/,\$p' /etc/group >/etc/group.bot");
+    system ("cp /etc/group.bot /opt/sysadmin/common/passwd/group.bot");
+    print " \n";
+    print "======================================================================\n";
+    print " NOTE   NOTE   NOTE   NOTE   NOTE   NOTE   NOTE   NOTE   NOTE   NOTE \n";
+    print "======================================================================\n";
+    print "Please manually update the LDAP servers with the changed group info:\n";
+    print " LDAP:  https://ldap.phas.ubc.ca/lam/templates/login.php  (Manager)\n";
+    print " LDAP2: https://ldap2.phas.ubc.ca/lam/templates/login.php (Manager)\n";
+    print " IPA02: https://ipa02.phas.ubc.ca/ipa/ui/index.html       (admin)\n";
+    print "======================================================================\n";
+    print " \n";
+}
+

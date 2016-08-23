@@ -1,0 +1,20 @@
+#!/usr/bin/perl -w
+
+use lib "..";
+use PHAS_PW_Utils qw[ Ask  get_username get_category get_studentnumber get_Pass_from_Terminal validate_Pass];
+
+print "testing read password from tty \n";
+
+my $pass1 = "";
+while ($pass1 eq "") {
+
+    my $try  = get_Pass_from_Terminal();
+
+    print "You entered $try\n";
+
+    if ( validate_Pass($try,500) ) {
+        my $retry = get_Pass_from_Terminal("Please Re-enter your password :");
+        if ($try eq $retry) { $pass1 = $try;}
+        else                { print "Password do not match, try again!\n\n";}
+    }
+}

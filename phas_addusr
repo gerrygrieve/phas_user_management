@@ -1,0 +1,32 @@
+#!/usr/bin/perl
+#
+# script to create user accounts
+#
+
+
+use lib ".";
+use PHAS_PW;
+use PHAS_PW_Utils;
+#
+print "\n... addusr ...  \n";
+
+my  $ud_ref  = PHAS_PW::get_user_info();
+%user_data = %{$ud_ref};
+foreach my $k ( keys %user_data) {
+	print "key [$k] ==> [$user_data{$k}]\n";
+}
+
+$user_data{pwd} = PHAS_PW_Utils::get_password($user_data{uid});
+
+
+	print "------------------------------------------------------------------------\n";
+	print "------------------------------------------------------------------------\n";
+	print "Creating id ...\n";
+#	my $gcos = "$firstname "."$lastname";
+	PHAS_PW::createid ( \%user_data );
+    PHAS_PW::mk_pgs_bottoms();
+    PHAS_PW:pgs_propagate();
+    
+
+
+

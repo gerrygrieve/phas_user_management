@@ -1,0 +1,9 @@
+#!/usr/bin/perl -w
+
+use English;
+# Must be run by root
+
+die "$0 must be run from root\n " if ( $EFFECTIVE_USER_ID );
+
+
+print "ok you must be root, effectively\n";

@@ -1,0 +1,14 @@
+#!/usr/bin/perl -w
+
+use lib "..";
+use PHAS_PW_Utils qw[ Ask  get_username get_category get_studentnumber get_uid get_account];
+
+print "testing get_account subroutine ... try default, bogus & valid\n";
+
+
+my @cats = ( qw [ System Ugrad Adj-Assoc Faculty Grads Others Postdocs Staff Misc Visitor]);
+foreach my $cat ( @cats ) {
+	my $acc  = get_account($cat);
+
+	print "A useable account ofr cat {$cat} is {$acc}\n";
+}

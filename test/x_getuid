@@ -1,0 +1,13 @@
+#!/usr/bin/perl -w
+
+use lib "..";
+use PHAS_PW_Utils qw[ Ask  get_username get_category get_studentnumber get_uid];
+
+
+foreach my $c ( "Ugrad", "Staff", "Other", "Misc") {
+
+	my $uid  = get_uid($c);
+	
+	print "A useable uid for catgory {$c} is {$uid}\n";
+
+}
