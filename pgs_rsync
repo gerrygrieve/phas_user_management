@@ -11,9 +11,12 @@ my $SOA_Host = shift;           #was MASTER in ori script;
 my $rsync         = "/usr/bin/rsync -o -g -p";
 my $LocalHostName = `hostname -s`;
 
-my $etcDir = "/etc/";
-my $etcDir = "/tmp/etc/"
+#my $etcDir = "/etc/";
+my $etcDir = "/tmp/etc/";
 
+if ($etcDir =  "/tmp/etc/")  {
+	mk_test_files($etcDir);
+}
 
 my $mysmbfile  = $etcDir .  "/samba/smbpasswd";
 my $mypassfile = $etcDir .  "passwd";
@@ -31,39 +34,93 @@ print "Debug --> host is $LocalHostName\n" if $DEBUG;
 my $SOA_IP =  inet_ntoa(inet_aton($SOA_Host));
 
 
-my $NOLOGIN = 1
-   $NOLOGIN = 0 if ( $LocalHostName = "delta" or
-                     $LocalHostName = "hyper" or
-                     $LocalHostName = "tau" );
-print "Debug --> [$LocalHostName]: NOLOGIN=[$NOLOGIN] \n" 
+my $NOLOGIN = 1;
+   $NOLOGIN = 0 if ( $LocalHostName eq "delta" or
+                     $LocalHostName eq "hyper" or
+                     $LocalHostName eq "tau" );
+print "Debug --> [$LocalHostName]: NOLOGIN=[$NOLOGIN] \n";
 #------
 
 
 # rsync the bot files and smbpasswd from MASTER
-if [ "$DEBUG" == 1 ] ; then echo -e "DEBUG[$LocalHostName]: rsync the bot files and smbpasswd from ${MASTER} \n" ; fi
-if [ "$DEBUG" == 1 ] ; then read -p "DEBUG[$LocalHostName]: Press [Enter] key to continue..." ; fi
+#if [ "$DEBUG" == 1 ] ; then echo -e "DEBUG[$LocalHostName]: rsync the bot files and smbpasswd from ${MASTER} \n" ; fi
+#if [ "$DEBUG" == 1 ] ; then read -p "DEBUG[$LocalHostName]: Press [Enter] key to continue..." ; fi
 
 $passfile = ($NOLOGIN == 1 ) ? "passwd.nologin.bot" : "passwd.bot";
 
-system ( "$rsync $SOA_Host::passwd/$passfile     $mypassbot);
-system ( "$rsync $SOA_Host::passwd/shadow.bot    $myshadbot);
-system ( "$rsync $SOA_Host::passwd/group.bot     $mygrpbot);
-system ( "$rsync $SOA_Host::etc/samba/smbpasswd  $mysmbfile);
-
+system ( "$rsync $SOA_Host::passwd/$passfile     $mypassbot");
+system ( "$rsync $SOA_Host::passwd/shadow.bot    $myshadbot");
+system ( "$rsync $SOA_Host::passwd/group.bot     $mygrpbot");
+system ( "$rsync $SOA_Host::etc/samba/smbpasswd  $mysmbfile");
 
 
 # make backup copies of current files...
-if [ "$DEBUG" == 1 ] ; then echo -e "DEBUG[$LocalHostName]: Make backup copies of current files. \n" ; fi
-if [ "$DEBUG" == 1 ] ; then read -p "DEBUG[$LocalHostName]: Press [Enter] key to continue..." ; fi
-tdayDate=`date +%Y%m%d`
+#if [ "$DEBUG" == 1 ] ; then echo -e "DEBUG[$LocalHostName]: Make backup copies of current files. \n" ; fi
+#if [ "$DEBUG" == 1 ] ; then read -p "DEBUG[$LocalHostName]: Press [Enter] key to continue..." ; fi
+
 
 my $today_iso = sprintf "%4d%2.2d%2.2d", Today();
-cp /etc/passwd /etc/passwd.$tdayDate
-cp /etc/shadow /etc/shadow.$tdayDate
-cp /etc/group /etc/group.$tdayDate
-cp /etc/samba/smbpasswd /etc/samba/smbpasswd.$tdayDate
-if [ "$DEBUG" == 1 ] ; then echo -e "DEBUG[$LocalHostName]: Done.\n" ; fi
+copy ( "/etc/passwd",  "/etc/passwd.$today_iso");
+copy ( "/etc/shadow",  "/etc/shadow.$today_iso");
+copy ( "/etc/group",    "/etc/group.$today_iso");
+copy ( "/etc/samba/smbpasswd", "/etc/samba/smbpasswd.$today_iso");
 
+
+# create the .new files...
+#if [ "$DEBUG" == 1 ] ; then echo -e "DEBUG[$LocalHostName]: Create the .new files.\n" ; fi
+#if [ "$DEBUG" == 1 ] ; then read -p "DEBUG[$LocalHostName]: Press [Enter] key to continue..." ; fi
+cat /etc/passwd_top /etc/passwd.bot > /etc/passwd.new
+cat /etc/shadow_top /etc/shadow.bot > /etc/shadow.new
+cat /etc/group_top /etc/group.bot > /etc/group.new
+chmod go-rwx /etc/shadow.new
+
+# do some simple checking, make sure top file
+
+foreach my $old (  $mypassfile, $myshadfile, $mygrpfile  ) {
+	my $new = $old.".new";
+	my $lold = `wc -l < $old`;
+	my $lnew = `wc -l < $new`;
+	die "on $LocalHostName; difference in $old file is too great "
+		if ( abs ( $lnew - $lold ) > 2 );
+}
+
+foreach my $old (  $mypassfile, $myshadfile,  $mygrpfile ) {
+	my $new = $old ".new";
+	copy ( $new, $old ) || die "cannot copy $new\n";
+	chown 0, 0, $old;		#chown root:root
+}
+
+chmod 0644 $mypassfile;
+chmod 0400 $myshadfile;
+chmod 0644 $mygrpfile;
+
+if [ "$DEBUG" == 1 ] ; then read -p "DEBUG[$LocalHostName]: Done. \n Press [Enter] key to continue..." ; fi
+#
+# display files...
+if [ "$DEBUG" == 1 ]
+then
+  ls -l /etc/passwd*
+  ls -l /etc/shadow*
+  ls -l /etc/group*
+fi
+
+if [ "$DEBUG" == 1 ] ; then echo "DEBUG[$LocalHostName]:  ** DONE ** " ; fi
+
+sub mk_test_files{
+
+	$etcDir = shift;
+	mkdir $etcDir unless -d $etcDir;
+	copy ( "/etc/passwd",  $etcDir."passwd");
+	copy ( "/etc/shadow",  $etcDir."/etc/shadow");
+	copy ( "/etc/group",   $etcDir. "/etc/group");
+
+	mkdir  $etcDir.'samba' unless -d $etcDir.'samba';
+	copy ( "/etc/samba/smbpasswd", $etcDir."/samba/smbpasswd");
+
+
+}
+
+sub delete_old_files {
 # need to delete old file more than 1 month old...
 #echo ""
 #echo "===================================================================="
@@ -80,60 +137,4 @@ if [ "$DEBUG" == 1 ] ; then echo -e "DEBUG[$LocalHostName]: Done.\n" ; fi
 #echo "===================================================================="
 #echo ""
 
-
-
-# create the .new files...
-if [ "$DEBUG" == 1 ] ; then echo -e "DEBUG[$LocalHostName]: Create the .new files.\n" ; fi
-if [ "$DEBUG" == 1 ] ; then read -p "DEBUG[$LocalHostName]: Press [Enter] key to continue..." ; fi
-cat /etc/passwd_top /etc/passwd.bot > /etc/passwd.new
-cat /etc/shadow_top /etc/shadow.bot > /etc/shadow.new
-cat /etc/group_top /etc/group.bot > /etc/group.new
-chmod go-rwx /etc/shadow.new
-
-# do some simple checking, make sure top file
-pwdLines=`wc -l /etc/passwd | cut -f1 -d' '`
-pwdLinesNew=`wc -l /etc/passwd.new | cut -f1 -d' '`
-shadLines=`wc -l /etc/shadow | cut -f1 -d' '`
-shadLinesNew=`wc -l /etc/shadow.new | cut -f1 -d' '`
-grpLines=`wc -l /etc/group | cut -f1 -d' '`
-grpLinesNew=`wc -l /etc/group.new | cut -f1 -d' '`
-pwdDiff=`expr $pwdLinesNew - $pwdLines`
-shadDiff=`expr $shadLinesNew - $shadLines`
-grpDiff=`expr $grpLinesNew - $grpLines`
-#
-
-if [ "$pwdDiff" -gt 2 ] || [ "$pwdDiff" -gt 2 ] || [ "$pwdDiff" -gt 2 ]
-then
-  echo "new and old passwd, shadow, or group files differ too much on host "`hostname`
-  echo "pwdDiff($pwdDiff), shadDdiff($shadDiff), or grpDiff($grpDiff) is ge 2"
-  exit
-fi
-if [ "$DEBUG" == 1 ] ; then echo -e "DEBUG[$LocalHostName]: Done.\n" ; fi
-
-if [ "$DEBUG" == 1 ] ; then echo -e "DEBUG[$LocalHostName]: cp the .new files into place." ; fi
-if [ "$DEBUG" == 1 ] ; then read -p "DEBUG[$LocalHostName]: Press [Enter] key to continue..." ; fi
-cp /etc/passwd.new /etc/passwd
-cp /etc/shadow.new /etc/shadow
-cp /etc/group.new /etc/group
-
-# update ownerships and permissions
-if [ "$DEBUG" == 1 ] ; then echo "DEBUG[$LocalHostName]: Updating ownerships and permissions..." ; fi
-chown root:root /etc/passwd
-chown root:root /etc/shadow
-chown root:root /etc/group
-chmod go-wx /etc/passwd
-chmod go+r /etc/passwd
-chmod go-rwx /etc/shadow
-chmod go-wx /etc/group
-chmod go+r /etc/group
-if [ "$DEBUG" == 1 ] ; then read -p "DEBUG[$LocalHostName]: Done. \n Press [Enter] key to continue..." ; fi
-#
-# display files...
-if [ "$DEBUG" == 1 ]
-then
-  ls -l /etc/passwd*
-  ls -l /etc/shadow*
-  ls -l /etc/group*
-fi
-
-if [ "$DEBUG" == 1 ] ; then echo "DEBUG[$LocalHostName]:  ** DONE ** " ; fi
+}
