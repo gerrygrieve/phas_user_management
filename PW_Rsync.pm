@@ -21,6 +21,20 @@ my $mygrpbot   = $etcDir .  "group.bot";
 
 1;
 
+sub check_linecounts {
+
+	my $err = ""; 
+	foreach my $old (  $mypassfile, $myshadfile, $mygrpfile  ) {
+		my $new = $old . ".new";
+		my $lold = `wc -l < $old`;
+		my $lnew = `wc -l < $new`;
+		my $diff = abs ( $lnew - $lold );
+		$err .= "difference in $old file is $diff\n "
+			if ( $diff > 2 );
+	}
+	return $err;
+}
+
 sub mk_new_files {
 	foreach my $old (  $mypassfile, $myshadfile, $mygrpfile  ) {
 		my $top = get_top($old);
