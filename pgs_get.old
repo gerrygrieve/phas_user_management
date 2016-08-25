@@ -1,0 +1,156 @@
+#!/bin/bash
+#  pgs_get script (formerly buildpgs)
+#  09-11-26 rdp  script to rsync passwd, group,shadow and smbpasswd files from hyper
+#  14-03-04 rdp  script to rsync passwd, group,shadow and smbpasswd files from MASTER
+#
+# MASTER is the server where we are copying the .bot files from 
+# check if first argument to pgs_get script is hyper or tau and set MASTER or exit
+
+RSCMD=/usr/bin/rsync
+LocalHostName=`hostname -s`
+DEBUG=0
+#$DEBUG = 0;   # Truth is the absence of Falsehood! (which is: zero|null|undefined)
+if [ "$DEBUG" == 1 ]
+then
+   echo "DEBUG[$LocalHostName]=$DEBUG (on)"
+fi
+
+if [ $1 != "tau" ];  then
+   if [ $1 != "hyper" ]; then
+     echo -e "---------------------------------------------------------------------- \n"
+     echo -e " First argument passwd to this script was not tau or hyper.  Exiting. \n"
+     echo -e "---------------------------------------------------------------------- \n"
+     exit 0
+   else
+     MASTER="192.168.1.100"  #hyper
+     if [ $LocalHostName = "cups" ]; then
+        MASTER="142.103.236.100"
+     fi
+     #echo "Script was called from $MASTER (hyper)."
+   fi
+else
+  MASTER="192.168.1.2"  #tau
+  if [ $LocalHostName = "cups" -o $LocalHostName = "phasor" ]; then
+     MASTER="142.103.236.2"
+  fi
+  #echo "Script was called from $MASTER (tau)."
+fi
+
+#RSCMD=/usr/bin/rsync
+#LocalHostName=`hostname -s`
+
+# NOLOGIN=0 for servers where normal users can login
+# NOLOGIN=1 for servers where normal users cannot login
+NOLOGIN=1
+if [ $LocalHostName = "delta" -o $LocalHostName = "hyper" -o $LocalHostName = "tau" ]; then
+   NOLOGIN=0
+fi
+if [ "$DEBUG" == 1 ] ; then echo -e "DEBUG[$LocalHostName]: NOLOGIN=$NOLOGIN \n" ; fi
+
+# rsync the bot files and smbpasswd from MASTER
+if [ "$DEBUG" == 1 ] ; then echo -e "DEBUG[$LocalHostName]: rsync the bot files and smbpasswd from ${MASTER} \n" ; fi
+if [ "$DEBUG" == 1 ] ; then read -p "DEBUG[$LocalHostName]: Press [Enter] key to continue..." ; fi
+
+if [ "$NOLOGIN" == 1 ]
+then
+  $RSCMD -o -g -p $MASTER::passwd/passwd.nologin.bot /etc/passwd.bot
+else
+  $RSCMD -o -g -p $MASTER::passwd/passwd.bot /etc/passwd.bot
+fi
+$RSCMD -o -g -p $MASTER::passwd/shadow.bot /etc/shadow.bot
+$RSCMD -o -g -p $MASTER::passwd/group.bot /etc/group.bot
+
+# rsync smbpasswd file directly, no manipulation needed
+$RSCMD -o -g -p $MASTER::etc/samba/smbpasswd /etc/samba/smbpasswd
+if [ "$DEBUG" == 1 ] ; then echo -e "DEBUG[$LocalHostName]: Done.\n" ; fi
+
+# make backup copies of current files...
+if [ "$DEBUG" == 1 ] ; then echo -e "DEBUG[$LocalHostName]: Make backup copies of current files. \n" ; fi
+if [ "$DEBUG" == 1 ] ; then read -p "DEBUG[$LocalHostName]: Press [Enter] key to continue..." ; fi
+tdayDate=`date +%Y%m%d`
+cp /etc/passwd /etc/passwd.$tdayDate
+cp /etc/shadow /etc/shadow.$tdayDate
+cp /etc/group /etc/group.$tdayDate
+cp /etc/samba/smbpasswd /etc/samba/smbpasswd.$tdayDate
+if [ "$DEBUG" == 1 ] ; then echo -e "DEBUG[$LocalHostName]: Done.\n" ; fi
+
+# need to delete old file more than 1 month old...
+#echo ""
+#echo "===================================================================="
+#echo "Deleting old passwd.*, shadow.* and group.* files on "`hostname`
+##echo "you may want to remove these old files on "`hostname`
+##echo /etc/group.`date --date="$(date +%Y-%m-15) -1 month" +%Y%m`[0-9][0-9]
+##ls -l /etc/group.`date --date="$(date +%Y-%m-15) -1 month" +%Y%m`[0-9][0-9]
+if [ "$DEBUG" == 1 ] ; then echo -e "DEBUG[$LocalHostName]: Delete old passwd.*, shadow.* and group.* files.\n" ; fi
+if [ "$DEBUG" == 1 ] ; then read -p "DEBUG[$LocalHostName]: Press [Enter] key to continue..." ; fi
+find /etc/passwd.2* -mtime +32 -exec rm {} \;
+find /etc/shadow.2* -mtime +32 -exec rm {} \;
+find /etc/group.2* -mtime +32 -exec rm {} \;
+if [ "$DEBUG" == 1 ] ; then echo -e "DEBUG[$LocalHostName]: Done.\n" ; fi
+#echo "===================================================================="
+#echo ""
+
+# create the _top files...
+# 15-06-12 commented this out, works better to just manually edit top
+# files when needed (ie when adding a new system acct)
+# use chattr =/- i to chg immutable bit on top files
+#if [ "$DEBUG" == 1 ] ; then echo "DEBUG:  create the .top files..." ; fi
+#awk 'NR==1,/splitz/' /etc/passwd | grep -v splitz > /etc/passwd.top
+#awk 'NR==1,/splitz/' /etc/shadow | grep -v splitz > /etc/shadow.top
+#awk 'NR==1,/splitz/' /etc/group  | grep -v splitz > /etc/group.top
+
+# create the .new files...
+if [ "$DEBUG" == 1 ] ; then echo -e "DEBUG[$LocalHostName]: Create the .new files.\n" ; fi
+if [ "$DEBUG" == 1 ] ; then read -p "DEBUG[$LocalHostName]: Press [Enter] key to continue..." ; fi
+cat /etc/passwd_top /etc/passwd.bot > /etc/passwd.new
+cat /etc/shadow_top /etc/shadow.bot > /etc/shadow.new
+cat /etc/group_top /etc/group.bot > /etc/group.new
+chmod go-rwx /etc/shadow.new
+
+# do some simple checking, make sure top file
+pwdLines=`wc -l /etc/passwd | cut -f1 -d' '`
+pwdLinesNew=`wc -l /etc/passwd.new | cut -f1 -d' '`
+shadLines=`wc -l /etc/shadow | cut -f1 -d' '`
+shadLinesNew=`wc -l /etc/shadow.new | cut -f1 -d' '`
+grpLines=`wc -l /etc/group | cut -f1 -d' '`
+grpLinesNew=`wc -l /etc/group.new | cut -f1 -d' '`
+pwdDiff=`expr $pwdLinesNew - $pwdLines`
+shadDiff=`expr $shadLinesNew - $shadLines`
+grpDiff=`expr $grpLinesNew - $grpLines`
+#
+
+if [ "$pwdDiff" -gt 2 ] || [ "$pwdDiff" -gt 2 ] || [ "$pwdDiff" -gt 2 ]
+then
+  echo "new and old passwd, shadow, or group files differ too much on host "`hostname`
+  echo "pwdDiff($pwdDiff), shadDdiff($shadDiff), or grpDiff($grpDiff) is ge 2"
+  exit
+fi
+if [ "$DEBUG" == 1 ] ; then echo -e "DEBUG[$LocalHostName]: Done.\n" ; fi
+
+if [ "$DEBUG" == 1 ] ; then echo -e "DEBUG[$LocalHostName]: cp the .new files into place." ; fi
+if [ "$DEBUG" == 1 ] ; then read -p "DEBUG[$LocalHostName]: Press [Enter] key to continue..." ; fi
+cp /etc/passwd.new /etc/passwd
+cp /etc/shadow.new /etc/shadow
+cp /etc/group.new /etc/group
+
+# update ownerships and permissions
+if [ "$DEBUG" == 1 ] ; then echo "DEBUG[$LocalHostName]: Updating ownerships and permissions..." ; fi
+chown root:root /etc/passwd
+chown root:root /etc/shadow
+chown root:root /etc/group
+chmod go-wx /etc/passwd
+chmod go+r /etc/passwd
+chmod go-rwx /etc/shadow
+chmod go-wx /etc/group
+chmod go+r /etc/group
+if [ "$DEBUG" == 1 ] ; then read -p "DEBUG[$LocalHostName]: Done. \n Press [Enter] key to continue..." ; fi
+#
+# display files...
+if [ "$DEBUG" == 1 ]
+then
+  ls -l /etc/passwd*
+  ls -l /etc/shadow*
+  ls -l /etc/group*
+fi
+
+if [ "$DEBUG" == 1 ] ; then echo "DEBUG[$LocalHostName]:  ** DONE ** " ; fi

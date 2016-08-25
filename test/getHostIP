@@ -1,0 +1,11 @@
+#!/usr/bin/perl -w
+
+use Socket;
+my $SOA_Host = "tau"; 
+@addresses = gethostbyname($SOA_Host)   or die "Can't resolve $SOA_Host: $!\n";
+@addresses = map { inet_ntoa($_) } @addresses[4 .. $#addresses];
+$address = inet_ntoa(inet_aton($SOA_Host));
+
+print " IP address for $SOA_Host is $address\n";
+print join ", ", @addresses;
+print "\n";
