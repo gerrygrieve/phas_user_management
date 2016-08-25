@@ -1,0 +1,16 @@
+#!/usr/bin/perl -w
+
+
+use lib "..";
+use PW_Rsync;
+use Socket;
+
+my $SOA_Host = "tau";
+my $SOA_IP =  inet_ntoa(inet_aton($SOA_Host));
+
+print "using $SOA_IP as ip address for master files\n";
+
+my $nologin = 1;
+PW_Rsync::rsync_files($nologin, $SOA_IP );
+PW_Rsync::mk_today_files( );
+print ("check for /tmp/etc  for bottom files & dated backups\n");
