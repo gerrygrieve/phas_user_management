@@ -35,6 +35,21 @@ sub check_linecounts {
 	return $err;
 }
 
+sub mk_truefiles {
+
+	foreach my $old (  $mypassfile, $myshadfile,  $mygrpfile ) {
+		my $new = $old . ".new";
+		cp ( $new, $old ) || die "cannot copy $new\n";
+		chown 0, 0, $old;		#chown root:root
+	}
+# Ensure the files have the proper permissions
+	chmod 0644, $mypassfile;
+	chmod 0400, $myshadfile;
+	chmod 0644, $mygrpfile;
+
+	return:
+}
+
 sub mk_new_files {
 	foreach my $old (  $mypassfile, $myshadfile, $mygrpfile  ) {
 		my $top = get_top($old);
