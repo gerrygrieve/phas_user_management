@@ -6,48 +6,64 @@
 use lib ".";
 use PHAS_PW;
 use PHAS_PW_Utils;
+use phas_LDAP;
 
-use constant Verbose => 1;
+my $Verbose = 1;
+#use constant Verbose => 1;
 #
-print "\nStep 1 get info on user  ...  \n";
+print (" this is $0 \n");
+
+vask ("\nStep 1 get info on user  ...  \n");
 
 my  $ud_ref  = PHAS_PW::get_user_info();
 %user_data = %{$ud_ref};
-#foreach my $k ( keys %user_data) {
-#	print "key [$k] ==> [$user_data{$k}]\n";
-#}
-print "\nStep 2 get a password ? ...  \n";
 
+vask ( "\nStep 2 get a password ? ...  \n");
 $user_data{pwd} = PHAS_PW_Utils::get_password($user_data{uid});
 
 
+vask ("Step 3 Add user to PDC  ...\n");
 print "\n", "="x45, " \n";
-print "\nStep 3 Add user to UNIX files  ...\n";
-#	my $gcos = "$firstname "."$lastname";
 
-    PHAS_PW::update_unix_files($udata_ref);
 
-	print "\nStep 4 Add user to UNIX files  ...\n";
-	PHAS_PW::update_usersDB($udata_ref); 
+vask ("Step 4 Add user to UNIX files  ...\n");
+PHAS_PW::update_unix_files($user_data_ref);
+
+vask ("Step 4a Add user to LDAP servers  ...\n");
+PHAS_PW_Utils::add_LDAP($user_data_ref); 
+
+vask ("\nStep 5 Creating  home dir as [$user_data{homedir}]\n"); 
+PHAS_PW_Utils::mk_homedir (	$user_data{uid},
+                            $user_data{gid},
+							$user_data{homedir} );
 	
-	print "\nStep 5 Creating  home dir as [$udata{homedir}]\n" if Verbose;
-	PHAS_PW_Utils::mk_homedir ($udata{uid}, $udata{gid}, $udata{homedir} );
-	
-	print "\nStep 6 Copying proto user files (skipping)  \n" if Verbose;
+vask ("Step 6 Copying proto user files (skipping)  "); 
 	#	PHAS_PW_Utils::copy_proto_files($Proto_Dir );
 	
-	print "\nStep 7 Updating pkkota DB  \n" if Verbose;
-	PHAS_PW_Utils::create_pykota_account( $udata{username}, $udata{printquota} );
+vask ("Step 7 Updating pkkota DB  ");
+PHAS_PW_Utils::create_pykota_account( $user_data{username}, $user_data{printquota} );
 	
-	print "\nStep 7 Updating mail  \n" if Verbose;
-	PHAS_PW_Utils::do_mail( $udata{username},  $udata{homedir},
-                            $udata{uid}, $udata{gid},  $udata{category} );
+vask ("Step 8 Updating mail ");
+PHAS_PW_Utils::do_mail( $user_data{username},  $user_data{homedir},
+                            $user_data{uid}, $user_data{gid},  $user_data{category} );
 
+vask ("Step 9 Update Users DB file  ...");
+PHAS_PW::update_usersDB($user_data_ref); 
+	
+vask ("Step 10 make PGS bottoms on pw-SOA  ..."); 
+PHAS_PW::mk_pgs_bottoms();
 
-
-#    PHAS_PW::mk_pgs_bottoms();
-#    PHAS_PW:pgs_propagate();
+vask ("Step 11 rsync PGS bottoms & create production PGS files ..."); 
+    PHAS_PW::pgs_propagate();
 #    
 #
+sub vask {
+	my $mess = shift;
+	return unless $Verbose;
 
+	print "$mess";
+	print " ---- Continue (y*/n) ?";
+	chomp($answer=<STDIN>);
+	exit if ($answer =~ /^n/i); 
+}
 

@@ -1,0 +1,18 @@
+#!/usr/bin/perl
+
+use Perl6::Slurp;
+my $pfile = "/etc/passwd";
+
+my $contents = slurp $pfile;
+my $sline = "splitz:x:199:307:Dummy user to split passwd file:/nonexistant:/usr/sbin/nologin";
+my ($top,  $bot) = split /$sline/, $contents;
+
+print $top;
+
+$bot = $sline . $bot;
+
+print "\n"x4;
+print "="x30;
+print "\n";
+
+print $bot;

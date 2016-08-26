@@ -1,0 +1,109 @@
+#!/usr/bin/perl -w
+
+my %udata = ( username => "grieve",
+			  category => "Staff",
+			  fullname => "Gerry Grieve",
+
+			);
+#    $user_data{CWL}        = Ask ("Enter CWL");
+#    $user_data{lastname}   = Ask ("Enter Lastname");
+#    $user_data{firstname}  = Ask ('Enter First Name');
+##    my ($guess) = lc( $1 . $user_data{lastname})  if $user_data{firstname} =~ /^(\w)/;		# get bboop from "Betty Boop" guess for useranme
+#    my $guess = $user_data{CWL};
+#    $user_data{username}   = get_username ($guess);
+#    $user_data{fullname}   = $user_data{firstname} . " " . $user_data{lastname};
+#    $user_data{uid}        = get_uid($user_data{category});
+#    $user_data{gid}        = get_gid($user_data{uid});
+#    $user_data{shell}      = "/bin/bash";
+#    $user_data{homedir}    = get_homedir($user_data{category}, $user_data{username} );
+#    $user_data{expdate}    = get_expdate($user_data{category});
+#    $user_data{diskquota}  = get_diskquota($user_data{category});
+#    $user_data{account}    = get_account($user_data{category});
+#    $user_data{printquota} = ($user_data{category} eq 'Ugrad') ? "" : "#"; 
+
+
+add_PDC_User( \%udata );
+
+
+sub add_PDC_User {
+
+    my $udata_ref = shift;
+    my %udata = %{$udata_ref};
+    my $PDC="phaspdc.phas.ubc.ca";  # Windows domain controller
+    my $sshcmd="/usr/bin/ssh administrator\@$PDC";
+ 
+
+	my $this_user = $udata{username} ;
+	my $this_pass =  $udata{pwd} ;
+	my $this_gcos = $udata{fullname} ;
+    my $this_cat  = $udata{category}; 
+	
+	$thispass=~s/[\"]/'''$&'''/g;    				# escape double quotes 
+	$thispass=~s/[\<\>\$()\&\|\;\@\\\"`]/\\$&/g;    # escape some special characters
+
+##  @cats_all = ( qw [ System  Ugrad Adj-Assoc
+##                     Faculty Grads AGrad
+##                      Others Postdocs Staff Misc Visitor]);
+    my @wingrp_Fac =  qw (Others Adj-Assoc Faculty  Postdocs Visitor Emeritus);
+
+    my $category = $udata{category} // "Staff";
+
+    my @winrrp_Fac   =  qw (Others Adj-Assoc Faculty  Postdocs Visitor Emeritus);
+    my @wingrp_Ugrad =  qw ( Ugrad Misc );
+
+    if    (grep  { $this_cat eq $_ } @wingrp_Fac)    { $wingroup = 'Faculty';}
+    elsif (grep  { $this_cat eq $_ } @wingrp_Ugrad)  { $wingroup = 'Ugrads' ;}
+    else                                             { $wingroup = $this_cat }
+  
+   # don't propagate to PDC if group hasn't been set
+   if ( $wingroup eq '' ) {
+      print STDERR "Unidentified group/category. Not propagated to PDC\n";
+      return;
+   }
+   # query PDC to see if we already have an account
+	open (USERS, "$sshcmd net user $this_user |") || die ("Something's  wrong with $PDC. Talk to systems people");
+	while(<USERS>) {
+	
+        if (/The user name could not be found/) {
+			print "no such user $this_user\n";
+            last;
+		}
+		else {
+			print " user $this_user exists, changePDC bailing...\n";
+			return;
+		}	
+	}
+	exit;
+
+   close(USERS);
+
+
+  ##
+  my $thispass = $pass;
+  #$thispass=~s/[\"]/'''$&'''/g;    # escape double quotes 
+  #$thispass=~s/[\<\>\$()\&\|\;\@\\\"`]/\\$&/g;    # escape some special characters
+  ##$gcos=~s/['\ ]/_/g;
+  #
+  ##
+  ## create new account or change password
+  #my $pscmd = "$sshcmd powershell.exe -InputFormat None d:\\\\scripts\\\\";
+  #if ($add) {
+  #    # create new account
+  #    print "Adding user $me to Windows domain ($PDC).\n";
+  #    $cmd=$pscmd."NewUser.ps1 $me \\\'$thispass\\\' \\\'$category\\\' \\\'$gcos\\\' \\\'$wingroup\\\'";
+  #
+  #} else {
+  #    # just change password
+  #    #print "Setting password in Windows domain.\n";  #DEBUG
+  #    $cmd=$pscmd."ChangeUserPwd.ps1 $me \\\'$thispass\\\'";
+  #}
+  #
+  ## we have to launder a system call also 
+  #if ($cmd =~ /^(.*)$/){ $cmd = $1; }
+  #
+  ##print "$cmd\n";   # debug
+  #system($cmd);
+  ##print "Exited with code: $?\n";  #DEBUG
+  #
+  #$<=$tmpid;
+}

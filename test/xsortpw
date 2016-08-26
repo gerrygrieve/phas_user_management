@@ -1,0 +1,18 @@
+#!/usr/bin/perl
+
+my $pfile = "/etc/passwd";
+
+open (P, "<", $pfile ) || die "cannot open $pfile";
+my %users =();
+my $intop = "intop";
+while ( <P> ) {
+	my ($user, $x, $uid,$gid, $gcos,@xx ) = split /:/;
+	$users{$uid} = $user. "   $intop";
+	$intop = "" if $user eq "splitz";
+}
+
+foreach my $id ( sort {$a <=> $b} keys %users) {
+
+	printf "%3d %s\n", $id, $users{$id};
+	last if $id > 300;
+}
