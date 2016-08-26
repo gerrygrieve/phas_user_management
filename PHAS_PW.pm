@@ -3,6 +3,7 @@ package PHAS_PW;
 #use lib '/opt/sysadmin/common/passwd/';
 use lib ".";
 use PHAS_PW_Utils;
+use phas_LDAP;
 use Carp;
 #qw[ Ask get_username get_category
 #					get_studentnumber  get_uid		get_gid
@@ -11,6 +12,8 @@ use Carp;
 #					];
 my $Verbose = $main::Verbose; 
 my $passwddir = "/opt/sysadmin/common/passwd/";
+
+##bottomdir MUST match [passwd]path in tau:;/etc/rsync.conf
 my $bottomdir = $passwddir ."bottoms/";
 my $userdb    = $passwddir ."users.db";		# data file for existing ids
 my $aliases   = $passwddir ."aliases";          # valid email addresses file
@@ -32,6 +35,10 @@ my $PW_Archive   = "$passwddir/Archive/"; 	## pw, shad,grp &smb
 my $Home_Archive = "/home/ARCHIVED";
 my $Proto_Dir    = "/home/prototype/default"; # archive of default user files
 
+#this set willget some form of the PGS bottoms 
+my @UNIX_Servers = qw (beta delta hyper mail omega tau zorok phasor cups);
+# these are the configuration names in the ../lib/ldap_conf.file
+my @LDAP_Servers = qw (IPA01)
 1;
 
 sub copy_files {
@@ -161,7 +168,6 @@ sub delete_pykota_account {
 	
 }
 
-
 sub do_mail {
     my $username = shift;
     my $homedir  = shift;
@@ -233,8 +239,8 @@ sub mk_pgs_bottoms  {
 
     system ("sed -n '/splitz/,\$p' /etc/passwd > $dst_file_login");
 	
-    open (BOT, "<", $dst_file_login)      || die "Cannot open file $dst_file_login\n";
-    open (NOLOGIN, ">",$dst_file_nologin) || die "Cannot open file $dst_file_nologin\n";
+    open (BOT,    "<", $dst_file_login)      || die "Cannot open file $dst_file_login\n";
+    open (NOLOGIN, ">",$dst_file_nologin)    || die "Cannot open file $dst_file_nologin\n";
 
     my @exceptions = qw ( rap grieve hongyun );
 	
@@ -249,11 +255,10 @@ sub mk_pgs_bottoms  {
     close BOT;
     close NOLOGIN;
     
-    
 ## shadow bottom...
-    $dst_file_login   =  $bottomdir . "shadow.bot";
+    my $dst_file   =  $bottomdir . "shadow.bot";
  
-    system ("sed -n '/splitz/,\$p' $shadow >$dst_file_login");
+    system ("sed -n '/splitz/,\$p' $shadow >$dst_file");
  #   system ("cp /etc/shadow.bot /opt/sysadmin/common/passwd/shadow.bot");
     
     system ("sed -n '/splitz/,\$p' /etc/group >/etc/group.bot");
@@ -263,13 +268,23 @@ sub mk_pgs_bottoms  {
     print " \n";
 }
 
+sub add_LDAP {
+    my $udata_ref = shift;
+    my %udata = %{$udata_ref};
+
+	foreach my $s ( @LDAP_Servers) {
+		phas_LDAP::add_LDAP_user($udata_ref, $s);
+	}
+	return;
+}
+
 sub pgs_propagate {
 	use Sys::Hostname;
 	my $DEBUG = shift;
     # Invoke pgs_get command on each server - will rsync appropriate files (incl. /etc/samba/smbpasswd)
-   my $SSHCMD = "/usr/bin/ssh";
-   my $remote_cmd = $DEBUG ? "/opt/sysadmin/common/passwd/pgs_get_fake"
-                           : "/usr/local/sbin/pgs_get";
+	my $SSHCMD = "/usr/bin/ssh";
+	my $remote_cmd = $DEBUG ? "/opt/sysadmin/common/passwd/pgs_get_fake"
+                            : "/opt/sysadmin/common/passwd/pgs_rsync";
    # an apparently undocumented part of running suid perl programs
    # it still isn't going to "just run setuid." 
    # you have to change your uid within your perl code, something like this. 
@@ -284,8 +299,7 @@ sub pgs_propagate {
    print "$ServerName \n\n";
    print "Please wait, updating ";  #DEBUG
  
-   my @newServers = qw( beta delta hyper mail omega tau zorok );
-   foreach my $newserver ( @newServers ) {
+   foreach my $newserver ( @UNIX_Servers ) {
        if ( $newserver ne $ServerName ) {
           print "..$newserver";  #DEBUG
           system( "$SSHCMD", "root\@$newserver", "$remote_cmd $ServerName" );
@@ -372,6 +386,12 @@ file_disposition & date (either suspended or deletion)
 
 EOD
 	return;
+}
+
+sub add_Windows {
+	my $udata_ref = shift;
+
+
 }
 
 sub Delete_Windows {	# Delete account from Windows domain
