@@ -1,15 +1,13 @@
 package PW_Rsync;
 
-
 use File::Copy "cp";			#cp will preserve the source file's permission bits
-use Date::Calc qw ( Today);
-my $DEBUG= 1;
+use Date::Calc qw ( Today );
+my $DEBUG = 1;
 my $etcDir = $DEBUG ? "/tmp/etc/" : "/etc/";
 
 if ($etcDir eq  "/tmp/etc/")  {
 	mk_test_files($etcDir);
 }
-
 
 my $mysmbfile  = $etcDir .  "/samba/smbpasswd";
 my $mypassfile = $etcDir .  "passwd";
@@ -18,6 +16,7 @@ my $mygrpfile  = $etcDir .  "group";
 my $mypassbot  = $etcDir .  "passwd.bot";
 my $myshadbot  = $etcDir .  "shadow.bot";
 my $mygrpbot   = $etcDir .  "group.bot";
+
 
 1;
 
@@ -103,7 +102,7 @@ sub mk_test_files{
 }
 
 sub get_top {
-	my $file =shift;
+	my $file = shift;
 
 ## note that tops currently ( 2016-08) pre-build as ( /etc/passwd_top, /etc/shadow_top, /etc/group_top)
 ## we just return these names
@@ -112,4 +111,19 @@ sub get_top {
 	my $top = $file . "_top";
 
 	return $top;
+}
+
+sub mk_bogus_PW {
+# fake an error condition
+# 1 save the current new file
+# 2 attach the old to the new new. this will give a line count ~ 2x;
+	
+	my $old = $mypassfile;
+    my $new = $old . ".new";
+	my $save = $new .".SAVE";
+
+	cp ($new, $save);
+	` cat  $old  >> $new`;
+
+	return;
 }

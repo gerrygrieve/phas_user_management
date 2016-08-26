@@ -1,0 +1,32 @@
+#!/usr/bin/perl -w
+
+
+use lib "..";
+use PW_Rsync;
+use Socket;
+
+my $SOA_Host = "tau";
+my $SOA_IP =  inet_ntoa(inet_aton($SOA_Host));
+
+print "using $SOA_IP as ip address for master files\n";
+
+my $nologin = 1;
+#PW_Rsync::rsync_files($nologin, $SOA_IP );
+#PW_Rsync::mk_today_files( );err
+#PW_Rsync::mk_new_files();
+
+
+print "This 1st test should pass \n";
+my $err = PW_Rsync::check_linecounts();
+if ($err ) {die "Error:: $err\n"; }
+else       {print "No Error!!  line counts < 3\n"; }
+
+
+
+print "make a bogus passwd file & try again...\n";
+
+PW_Rsync::mk_bogus_PW();
+my $err2 = PW_Rsync::check_linecounts();
+if ($err2 ) {die "Error:: $err2\n"; }
+else       {print "no err line counts < 3\n" ;}
+
