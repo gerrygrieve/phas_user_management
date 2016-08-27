@@ -5,22 +5,7 @@ my %udata = ( username => "grieve",
 			  fullname => "Gerry Grieve",
 
 			);
-#    $user_data{CWL}        = Ask ("Enter CWL");
-#    $user_data{lastname}   = Ask ("Enter Lastname");
-#    $user_data{firstname}  = Ask ('Enter First Name');
-##    my ($guess) = lc( $1 . $user_data{lastname})  if $user_data{firstname} =~ /^(\w)/;		# get bboop from "Betty Boop" guess for useranme
-#    my $guess = $user_data{CWL};
-#    $user_data{username}   = get_username ($guess);
-#    $user_data{fullname}   = $user_data{firstname} . " " . $user_data{lastname};
-#    $user_data{uid}        = get_uid($user_data{category});
-#    $user_data{gid}        = get_gid($user_data{uid});
-#    $user_data{shell}      = "/bin/bash";
-#    $user_data{homedir}    = get_homedir($user_data{category}, $user_data{username} );
-#    $user_data{expdate}    = get_expdate($user_data{category});
-#    $user_data{diskquota}  = get_diskquota($user_data{category});
-#    $user_data{account}    = get_account($user_data{category});
-#    $user_data{printquota} = ($user_data{category} eq 'Ugrad') ? "" : "#"; 
-
+my $PDC="phaspdc.phas.ubc.ca";  # Windows domain controller
 
 add_PDC_User( \%udata );
 
@@ -29,17 +14,14 @@ sub add_PDC_User {
 
     my $udata_ref = shift;
     my %udata = %{$udata_ref};
-    my $PDC="phaspdc.phas.ubc.ca";  # Windows domain controller
-    my $sshcmd="/usr/bin/ssh administrator\@$PDC";
- 
 
 	my $this_user = $udata{username} ;
-	my $this_pass =  $udata{pwd} ;
+	my $this_pass = $udata{pwd} ;
 	my $this_gcos = $udata{fullname} ;
     my $this_cat  = $udata{category}; 
 	
-	$thispass=~s/[\"]/'''$&'''/g;    				# escape double quotes 
-	$thispass=~s/[\<\>\$()\&\|\;\@\\\"`]/\\$&/g;    # escape some special characters
+	$this_pass=~s/[\"]/'''$&'''/g;    				# escape double quotes 
+	$this_pass=~s/[\<\>\$()\&\|\;\@\\\"`]/\\$&/g;    # escape some special characters
 
 ##  @cats_all = ( qw [ System  Ugrad Adj-Assoc
 ##                     Faculty Grads AGrad
@@ -60,8 +42,10 @@ sub add_PDC_User {
       print STDERR "Unidentified group/category. Not propagated to PDC\n";
       return;
    }
+my $sshcmd="/usr/bin/ssh administrator\@$PDC";
    # query PDC to see if we already have an account
-	open (USERS, "$sshcmd net user $this_user |") || die ("Something's  wrong with $PDC. Talk to systems people");
+	open (USERS, "$sshcmd net user $this_user |") ||
+       die ("Something's  wrong with $PDC. Talk to systems people");
 	while(<USERS>) {
 	
         if (/The user name could not be found/) {
@@ -73,20 +57,16 @@ sub add_PDC_User {
 			return;
 		}	
 	}
-	exit;
+	
 
    close(USERS);
+ 
+	## create new account or change password
+	my $PS_cmd = "$sshcmd powershell.exe -InputFormat None d:\\\\scripts\\\\";
+	my $Add_cmd = $PS_cmd . "NewUser.ps1 $this_user \\\'$this_pass\\\' \\\'$this_cat\\\' \\\'$this_gcos\\\' \\\'$wingroup\\\'";
 
-
-  ##
-  my $thispass = $pass;
-  #$thispass=~s/[\"]/'''$&'''/g;    # escape double quotes 
-  #$thispass=~s/[\<\>\$()\&\|\;\@\\\"`]/\\$&/g;    # escape some special characters
-  ##$gcos=~s/['\ ]/_/g;
-  #
-  ##
-  ## create new account or change password
-  #my $pscmd = "$sshcmd powershell.exe -InputFormat None d:\\\\scripts\\\\";
+	print "[$Add_cmd]", "\n";
+exit;
   #if ($add) {
   #    # create new account
   #    print "Adding user $me to Windows domain ($PDC).\n";

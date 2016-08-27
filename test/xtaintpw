@@ -1,0 +1,16 @@
+#!/usr/bin/perl
+
+
+use Carp;
+
+my @tests = qw [ grieve gri99 grieve+gerry g.. ];
+
+foreach my $userid (@tests) {
+	print "trying [$userid] ";
+	if ( $userid =~ m{^(\w)+$} ) {
+		$userid = $1;
+		print  " is Okay \n";
+	} else {
+		print   " is tainted, delete_User bailing\n";
+	}
+}
