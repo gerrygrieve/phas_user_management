@@ -1,0 +1,11 @@
+todo for addusr
+
+
+pgs_rsync -- delete files routine
+          -- rsync ip addresses
+
+Valid pw -- check gcos
+         -- state rules set
+
+phas_SMB 
+
