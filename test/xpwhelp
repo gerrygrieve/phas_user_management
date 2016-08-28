@@ -1,0 +1,8 @@
+#!/usr/bin/perl -w
+
+use lib "..";
+use PHAS_PW_Utils;
+
+print "test password help.. \n";
+
+PHAS_PW_Utils::get_Pass_from_Terminal();

@@ -25,8 +25,6 @@ my @pw_digit = ( 0 .. 9 );
 my ($special_help, $otherref) = special_characters();
 my @pw_other  = @{$otherref};
 
-
-
 my @cats_help = (   "account needed for system software",
                     "an undergraduate student",
                     "adjunct & Associate Faculty",
@@ -45,6 +43,15 @@ my @cats_all = ( qw [ System  Ugrad Adj-Assoc
 my @cats_mail = qw [  Faculty  Staff Postdocs  Adj-Assoc
                       Grads    AGrad Others ];
 
+## Password restections:
+   my $min_length  = 12;
+    my $min_length2 = 15;			## not used
+    my $max_length  = 128;
+    my $min_charclass    = 4;
+    my $min_charclass2   = 2;		## not used
+    my $gecos_string_len = 4;
+
+                      
 1;
 
 sub get_catmail { return @cats_mail; }
@@ -492,6 +499,24 @@ sub get_password {
 sub get_Pass_from_Terminal {
 
     my $prompt = shift;
+    my $sc = join "", values %specials;
+    print << EndofPWRules;
+    Rules enforced for an acceptable password;  
+        1. maximum length < 129 characters
+        2. minimun length > 12  characters
+        3. mimimun number of character classes = 4;
+            character class are;
+            i. ASCII Character Set --lower case [a-z]
+           ii. ASCII Character Set -- upper case [A-Z]
+          iii. Numeric charaters  [0-9]
+           iv. Special characters ( $sc )
+        4. qwerty sequences not allowed ( eg qwer )
+        5. fragements of the full name not allowed
+           
+           
+EndofPWRules;          
+           
+
 	$prompt = "Enter a password" unless $prompt;
     use Term::ReadKey;
 
