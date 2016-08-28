@@ -1,0 +1,11 @@
+#!/usr/bin/phas -w
+
+use English  qw( -no_match_vars );
+$ENV{PATH}="";
+
+my $username = $ENV{LOGNAME} || $ENV{USER} || getpwuid($UID);
+
+print "user {$username} real uid {$UID}  effective uif {$EUID}\n";
+
+
+
