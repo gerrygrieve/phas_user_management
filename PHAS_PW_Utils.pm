@@ -500,7 +500,7 @@ sub get_Pass_from_Terminal {
 
     my $prompt = shift;
     my $sc = join "", values %specials;
-    print << EndofPWRules;
+    print <<EndofPWRules;
     Rules enforced for an acceptable password;  
         1. maximum length < 129 characters
         2. minimun length > 12  characters
@@ -514,7 +514,7 @@ sub get_Pass_from_Terminal {
         5. fragements of the full name not allowed
            
            
-EndofPWRules;          
+EndofPWRules        
            
 
 	$prompt = "Enter a password" unless $prompt;
