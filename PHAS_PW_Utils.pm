@@ -52,7 +52,7 @@ my @cats_mail = qw [  Faculty  Staff Postdocs  Adj-Assoc
     my $gecos_string_len = 4;
 
     
-        my %specials = (	"left   bracket"      => "[",  
+    my %specials = (	"left   bracket"      => "[",  
                         "right  bracket"      => "]",
                         "left  parenthesis"   => "(",
                         "right parenthesis"   => ")",
@@ -502,24 +502,28 @@ sub get_Pass_from_Terminal {
 
     my $prompt = shift;
     my $sc = join "", values %specials;
+    
+    
     print <<"EndofPWRules";
     
     
     Rules enforced for an acceptable password;  
-        1. maximum length < 129 characters
-        2. minimun length > 12  characters
-        3. mimimun number of character classes = 4;
+        1.  length < 129 characters (maximum)
+        2.  length > 12  characters (minimun)
+        3. at least 1 character from EACH of the 4 character classes
             character class are;
-            i. ASCII Character Set --lower case [a-z]
-           ii. ASCII Character Set -- upper case [A-Z]
+            i. ASCII Lower Case Characters -- [a-z]
+           ii. ASCII Upper Case Characters -- [A-Z]
           iii. Numeric charaters  [0-9]
            iv. Special characters ( $sc )
-        4. qwerty sequences not allowed ( eg qwer )
-        5. fragements of the full name not allowed
+        4. qwerty (keyboard) sequences are not allowed ( eg qwer/vbnm )
+        5. 4 character fragments of the full name are not allowed
+        
+    Note asteriks, "*", will be displayed in place of the typed characters 
            
-           
-EndofPWRules        
-           
+        
+EndofPWRules
+
 
 	$prompt = "Enter a password" unless $prompt;
     use Term::ReadKey;

@@ -7,6 +7,7 @@ use lib ".";
 use PHAS_PW;
 use PHAS_PW_Utils;
 use phas_LDAP;
+use phas_SMB;
 
 my $Verbose = 1;
 #use constant Verbose => 1;
@@ -14,17 +15,14 @@ my $Verbose = 1;
 print (" this is $0 \n");
 
 vask ("\nStep 1 get info on user  ...  \n");
-
 my  $ud_ref  = PHAS_PW::get_user_info();
 %user_data = %{$ud_ref};
 
 vask ( "\nStep 2 get a password ? ...  \n");
 $user_data{pwd} = PHAS_PW_Utils::get_password($user_data{uid});
 
-
 vask ("Step 3 Add user to PDC  ...\n");
 print "\n", "="x45, " \n";
-
 
 vask ("Step 4 Add user to UNIX files  ...\n");
 PHAS_PW::update_unix_files($user_data_ref);
@@ -54,7 +52,7 @@ vask ("Step 10 make PGS bottoms on pw-SOA  ...");
 PHAS_PW::mk_pgs_bottoms();
 
 vask ("Step 11 rsync PGS bottoms & create production PGS files ..."); 
-    PHAS_PW::pgs_propagate();
+PHAS_PW::pgs_propagate();
 #    
 #
 sub vask {
