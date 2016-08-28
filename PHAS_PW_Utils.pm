@@ -51,18 +51,8 @@ my @cats_mail = qw [  Faculty  Staff Postdocs  Adj-Assoc
     my $min_charclass2   = 2;		## not used
     my $gecos_string_len = 4;
 
-                      
-1;
-
-sub get_catmail { return @cats_mail; }
-
-sub special_characters {
-    ## reference http://www.sussex.ac.uk/its/help/faq?faqid=839
-    # define the accepctable Special character table for passwords
-    # return a scalar which is a help text w annotated lsi of chars
-    # return a array ref of the acceptbale chars
     
-    my %specials = (	"left   bracket"      => "[",  
+        my %specials = (	"left   bracket"      => "[",  
                         "right  bracket"      => "]",
                         "left  parenthesis"   => "(",
                         "right parenthesis"   => ")",
@@ -89,6 +79,18 @@ sub special_characters {
                         minus			      => '-',
                         asterisk              => '*',
                     );
+
+                      
+1;
+
+sub get_catmail { return @cats_mail; }
+
+sub special_characters {
+    ## reference http://www.sussex.ac.uk/its/help/faq?faqid=839
+    # define the accepctable Special character table for passwords
+    # return a scalar which is a help text w annotated lsi of chars
+    # return a array ref of the acceptbale chars
+    
 
     my $j = 0;
     my $ncols = 5;
@@ -500,7 +502,9 @@ sub get_Pass_from_Terminal {
 
     my $prompt = shift;
     my $sc = join "", values %specials;
-    print <<EndofPWRules;
+    print <<"EndofPWRules";
+    
+    
     Rules enforced for an acceptable password;  
         1. maximum length < 129 characters
         2. minimun length > 12  characters

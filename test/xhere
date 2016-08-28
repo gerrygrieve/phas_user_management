@@ -1,0 +1,86 @@
+#!/usr/bin/perl -w
+
+use lib "..";
+#use PHAS_PW_Utils;
+
+print "test password help.. \n";
+
+get_Pass_from_Terminal();
+
+print "="x67;
+print <<"EndofPWRulesx";
+    
+    main Rules enforced for an acceptable password;
+    
+        1. maximum length < 129 characters
+        2. minimun length > 12  characters
+        3. mimimun number of character classes = 4;
+            character class are;
+            i. ASCII Character Set --lower case [a-z]
+           ii. ASCII Character Set -- upper case [A-Z]
+          iii. Numeric charaters  [0-9]
+           iv. Special characters ( $sc )
+        4. qwerty sequences not allowed ( eg qwer )
+        5. fragements of the full name not allowed
+ 
+           
+           
+EndofPWRulesx
+
+
+sub get_Pass_from_Terminal {
+    
+       my %specials = (	"left   bracket"      => "[",  
+                        "right  bracket"      => "]",
+                        "left  parenthesis"   => "(",
+                        "right parenthesis"   => ")",
+                    #	"left  Brace"         => "{", 		##not accpetable by MS ??? 
+                    #	"right Brace"         => "}",
+                        hash                  => '#',
+                        caret				  => '^',
+                        colon				  => ':',
+                        comma				  => ',',
+                        "semi-colon"		  => ';',
+                        "exclamation mark"    => '!',
+                        "vertical bar"        => '|',
+                        ampersand			  => '&',
+                        underscore            => '_',
+                        backtick			  => '`',
+                        tilde				  => '~',
+                        at 			          => '@',
+                        dollar 		          => '$',
+                        percent		 	      => '%',
+                        slash 		 		  => "\/",
+                        backslash     		  => "\\",
+                        equal			 	  => '=',
+                        plus			 	  => '+',
+                        minus			      => '-',
+                        asterisk              => '*',
+                    );
+
+
+    #my $prompt = shift;
+    my $sc = join "", values %specials;
+    
+    print "sc are [$sc]\n";
+print <<"EndofPWRules";
+    
+    Rules enforced for an acceptable password;
+    
+        1. maximum length < 129 characters
+        2. minimun length > 12  characters
+        3. mimimun number of character classes = 4;
+            character class are;
+            i. ASCII Character Set --lower case [a-z]
+           ii. ASCII Character Set -- upper case [A-Z]
+          iii. Numeric charaters  [0-9]
+           iv. Special characters ( $sc )
+        4. qwerty sequences not allowed ( eg qwer )
+        5. fragements of the full name not allowed
+ 
+           
+           
+EndofPWRules
+        
+           
+}
