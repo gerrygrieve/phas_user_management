@@ -1,0 +1,12 @@
+#!/usr/bin/perl -w
+
+
+use lib "..";
+use phas_SMB;
+
+
+my $user = "efudd";
+my $pw   = "g67h89+=x21"; 
+
+my $err = phas_SMB::add_User($user, $pw);
+
