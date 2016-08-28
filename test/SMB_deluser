@@ -1,0 +1,24 @@
+#!/usr/bin/perl -w
+
+
+use lib "..";
+use phas_SMB;
+
+
+my $user = "bboop";
+my $pw   = "g67h89+=x21"; 
+
+
+my $grep = `grep bboop /etc/samba/smbpasswd`;
+print "before delete grep \n $grep \n ";
+
+
+my $err = phas_SMB::delete_User($user);
+
+my $grep = `grep bboop /etc/samba/smbpasswd`;
+print "after  delete grep \n [$grep] \n ";
+
+phas_SMB::add_User ($user  $pw);
+
+my $grep = `grep bboop /etc/samba/smbpasswd`;
+print "after re add grep \n [$grep] \n ";
