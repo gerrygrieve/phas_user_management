@@ -9,5 +9,15 @@ my $username = $ENV{LOGNAME} || $ENV{USER} || getpwuid($UID);
 
 print "user {$username} real uid {$UID}  effective uif {$EUID}\n";
 
-my $curr_pw = get_Pass_from_Terminal("enter current password <", "nohelp")
+my $pwd = (getpwuid($UID))[1];
+my $curr_pw = "";
+my $prompt = "enter current password > ";
+my $i=1;
+while ($i < 5) {
+
+    $curr_pw = get_Pass_from_Terminal($prompt, "nohelp")
+    last if crypt($curr_pw, $pwd) eq $pwd;
+    $i++;
+    $prompt = "try $i, $prompt "; 
+}
 
