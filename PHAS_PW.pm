@@ -221,14 +221,6 @@ INPUT_USER_PARAMETERS:
 #    my ($guess) = lc( $1 . $user_data{lastname})  if $user_data{firstname} =~ /^(\w)/;		# get bboop from "Betty Boop" guess for useranme
     my $guess = $user_data{CWL};
     $user_data{username}   = get_username ($guess);
-    $user_data{fullname}   = $user_data{firstnam$user_data{category}   = get_category();
-    $user_data{studentno}  = get_studentnumber($user_data{category});
-    $user_data{CWL}        = Ask ("Enter CWL");
-    $user_data{lastname}   = Ask ("Enter Lastname");
-    $user_data{firstname}  = Ask ('Enter First Name');
-#    my ($guess) = lc( $1 . $user_data{lastname})  if $user_data{firstname} =~ /^(\w)/;		# get bboop from "Betty Boop" guess for useranme
-    my $guess = $user_data{CWL};
-    $user_data{username}   = get_username ($guess);
     $user_data{fullname}   = $user_data{firstname} . " " . $user_data{lastname};
     $user_data{uid}        = get_uid($user_data{category});
     $user_data{gid}        = get_gid($user_data{uid});
