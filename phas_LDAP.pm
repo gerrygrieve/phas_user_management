@@ -73,7 +73,7 @@ sub query {
 			$attrs{$kk} = $val;
 		}
 	} elsif ($result->count > 1 ) {
-		print $result->count " records found for $uid\n";
+		print $result->count,  " records found for $uid\n";
 	} else {
 		print " no records found for $uid\n";
 	}
