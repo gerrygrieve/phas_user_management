@@ -237,14 +237,6 @@ INPUT_USER_PARAMETERS:
     $user_data{expdate}    = get_expdate($user_data{category});
     $user_data{diskquota}  = get_diskquota($user_data{category});
     $user_data{account}    = get_account($user_data{category});
-    $user_data{printquota} e} . " " . $user_data{lastname};
-    $user_data{uid}        = get_uid($user_data{category});
-    $user_data{gid}        = get_gid($user_data{uid});
-    $user_data{shell}      = "/bin/bash";
-    $user_data{homedir}    = get_homedir($user_data{category}, $user_data{username} );
-    $user_data{expdate}    = get_expdate($user_data{category});
-    $user_data{diskquota}  = get_diskquota($user_data{category});
-    $user_data{account}    = get_account($user_data{category});
     $user_data{printquota} = ($user_data{category} eq 'Ugrad') ? "" : "#"; 
 
     my $ans = confirm_input ( \%user_data);
