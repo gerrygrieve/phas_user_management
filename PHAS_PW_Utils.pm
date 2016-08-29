@@ -477,16 +477,20 @@ sub get_password {
 		close $fh;
 	}
     
-    if ( Ask("Want to set password for this id? ", "Yes") !~ /^y/i) {
-        print "Terminating addusr.\n"; exit 0;}
-	else {
+#    if ( Ask("Want to set password for this id? ", "Yes") !~ /^y/i) {
+#        print "Terminating addusr.\n"; exit 0;}
+#	else
+	{
 		system "clear";
-		print  $data
-;
+		print  $data;
+
 		if (Ask("DO YOU AGREE TO THESE TERMS?", "no", $pwhelp ) !~/^n/i) {
- 
+			my $ntrys = 0;
+			my $prompt = "Enter a password";
+			my $nohelp = 0;
 			while ($pass1 eq "") {
-			    my $try  = get_Pass_from_Terminal();
+			    my $try  = get_Pass_from_Terminal($prompt, $nohelp);
+				$nohelp++;
 			    if ( validate_Pass($try,$uid) ) {
 			        my $retry = get_Pass_from_Terminal("Please Re-enter your password :");
 			        if ($try eq $retry) { $pass1 = $try;}
@@ -503,7 +507,6 @@ sub get_Pass_from_Terminal {
     my $prompt = shift;
     my $nohrlp = shift;
     my $sc = join "", values %specials;
-    
     
     print <<"EndofPWRules" unless $nohelp;
     
