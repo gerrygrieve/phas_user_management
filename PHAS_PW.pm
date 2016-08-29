@@ -5,6 +5,7 @@ use lib ".";
 use PHAS_PW_Utils;
 use phas_LDAP;
 use Carp;
+
 #qw[ Ask get_username get_category
 #					get_studentnumber  get_uid		get_gid
 #					get_homedir        get_expdate
@@ -35,10 +36,13 @@ my $PW_Archive   = "$passwddir/Archive/"; 	## pw, shad,grp &smb
 my $Home_Archive = "/home/ARCHIVED";
 my $Proto_Dir    = "/home/prototype/default"; # archive of default user files
 
-# will get some form of the PGS bottoms 
-my @UNIX_Servers = qw (beta delta  mail omega tau zorok phasor cups);
+# will get some form of the PGS bottoms
+
+my @login_hosts   = qw (delta tau);
+my @nologin_hosts = qw (beta mail omega zorok phasor cups);
+my @UNIX_Servers  = qw ( @login_hosts, @nologin_hosts );
 # these are the configuration names in the ../lib/ldap_conf.file
-my @LDAP_Servers = qw (IPA01)
+my @LDAP_Servers  = qw (IPA01);
 1;
 
 sub copy_files {
