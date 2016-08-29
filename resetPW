@@ -1,5 +1,7 @@
-#!/usr/bin/phas -w
+#!/usr/bin/perl -w
 
+use lib ".";
+use PHAS_PW_Utils;
 use English  qw( -no_match_vars );
 $ENV{PATH}="";
 
@@ -7,5 +9,5 @@ my $username = $ENV{LOGNAME} || $ENV{USER} || getpwuid($UID);
 
 print "user {$username} real uid {$UID}  effective uif {$EUID}\n";
 
-
+my $curr_pw = get_Pass_from_Terminal("enter current password <", "nohelp")
 

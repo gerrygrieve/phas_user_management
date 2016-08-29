@@ -501,10 +501,11 @@ sub get_password {
 sub get_Pass_from_Terminal {
 
     my $prompt = shift;
+    my $nohrlp = shift;
     my $sc = join "", values %specials;
     
     
-    print <<"EndofPWRules";
+    print <<"EndofPWRules" unless $nohelp;
     
     
     Rules enforced for an acceptable password;  
