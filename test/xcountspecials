@@ -1,0 +1,21 @@
+#!/usr/bin/perl -w
+
+use lib "..";
+use PHAS_PW_Utils qw[ Ask  get_username get_category get_studentnumber get_Pass_from_Terminal validate_Pass];
+
+print "testing REGEX for specials \n";
+
+my @tests = ("A~", "B!@", "c#$%", "D^&*(", "E){}=+<>:",);
+
+my ($special_help, $otherref) = PHAS_PW_Utils::special_characters();
+my @pw_other  = @{$otherref};
+foreach my $t ( @tests ) {
+	my $char_err .= "";
+    my $nother++ if  ( map { my $x = q{\\} . $_;  $t =~ /$x/}  @pw_other);
+    print " test [$t] count  is $nother\n";
+     $char_err .= " You must in at least 1 other character\n"     unless ( $nother);
+
+	print "error is [$char_err]\n";
+}
+
+

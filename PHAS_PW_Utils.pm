@@ -51,7 +51,6 @@ my @cats_mail = qw [  Faculty  Staff Postdocs  Adj-Assoc
     my $min_charclass2   = 2;		## not used
     my $gecos_string_len = 4;
 
-    
     my %specials = (	"left   bracket"      => "[",  
                         "right  bracket"      => "]",
                         "left  parenthesis"   => "(",
@@ -78,6 +77,7 @@ my @cats_mail = qw [  Faculty  Staff Postdocs  Adj-Assoc
                         plus			 	  => '+',
                         minus			      => '-',
                         asterisk              => '*',
+						questionmark		  => '?',
                     );
 
                       
@@ -489,10 +489,13 @@ sub get_password {
 			my $prompt = "Enter a password";
 			my $nohelp = 0;
 			while ($pass1 eq "") {
+
 			    my $try  = get_Pass_from_Terminal($prompt, $nohelp);
 				$nohelp++;
+
+
 			    if ( validate_Pass($try,$uid) ) {
-			        my $retry = get_Pass_from_Terminal("Please Re-enter your password :");
+			        my $retry = get_Pass_from_Terminal("Please Re-enter your password");
 			        if ($try eq $retry) { $pass1 = $try;}
 			        else                { print "Password do not match, try again!\n\n";}
 				}
@@ -505,7 +508,7 @@ sub get_password {
 sub get_Pass_from_Terminal {
 
     my $prompt = shift;
-    my $nohrlp = shift;
+    my $nohelp = shift;
     my $sc = join "", values %specials;
     
     print <<"EndofPWRules" unless $nohelp;
@@ -550,6 +553,7 @@ EndofPWRules
 
     ReadMode('restore');
 	print "\n";
+
     return $pass;
 }
 
@@ -565,18 +569,22 @@ sub validate_Pass {
     my $min_charclass2   = 2;		## not used
     my $gecos_string_len = 4;
 
- 
+
 # At least more than $min_length characters
-    if (length($str) < $min_length) {
-        print "Please use at least $min_length characters\n";
+	my $ntyped = length($str);
+    if ($ntyped  < $min_length) {
+        print "Password too short. $ntyped chars!! Please use at least $min_length characters\n";
         return 0;
     }
-
+	my @pw_spec = values %specials;
+	
 # check the number of char classes
-    my $nupper++ if  ( map {$str =~ /$_/} @pw_upper);
-    my $nlower++ if  ( map {$str =~ /$_/} @pw_lower);
-    my $ndigit++ if  ( map {$str =~ /$_/} @pw_digit);
-    my $nother++ if  ( map { my $x = q{\\} . $_;  $str =~ /$x/}  @pw_other);
+	my $nupper = my $nlower = my $ndigit = my $nother = 0;
+    $nupper++ if  ( map {$str =~ /$_/} @pw_upper);
+    $nlower++ if  ( map {$str =~ /$_/} @pw_lower);
+    $ndigit++ if  ( map {$str =~ /$_/} @pw_digit);
+    $nother++ if  ( map { my $x = q{\\} . $_;  $str =~ /$x/}  @pw_spec);
+
     my $char_err = "";
     $char_err .= " You must in at least 1 upper case letter\n"   unless ( $nupper);
     $char_err .= " You must in at least 1 lower case letter\n"   unless ( $nlower);
