@@ -4,9 +4,9 @@
 use Config::Tiny;
 use Net::LDAP;
 
-
+$config_file = '/opt/sysadmin/common/lib/ldap_conf.file';
 my $Config = Config::Tiny->new;
-$Config = Config::Tiny->read( 'conf.file' );
+$Config = Config::Tiny->read( $config_file );
 
 my $this_server = 'IPA01';
 
